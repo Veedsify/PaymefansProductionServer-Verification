@@ -1,23 +1,15 @@
-import Image from "next/image";
+import OutLetPage from "@/components/outletpage";
+import TopNav from "@/components/topnav";
 
 export default function Home() {
   return (
-    <main className="bg-[#333]">
-      <div className="flex flex-col items-center justify-center min-h-screen py-2">
-        <div className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center bg-white">
-          <Image
-            src="/logo.png"
-            alt="Paymefans"
-            width={200}
-            height={200}
-            className="mb-10"
-          />
-          <h1 className="text-6xl font-bold text-white">
-            Welcome to Paymefans
-          </h1>
-          <p className="mt-3 text-2xl text-white">
-            Your account is successfully verified
-          </p>
+    <main
+      className="w-full bg-slate-950 min-h-screen flex flex-col"
+    >
+      <div className="flex flex-col h-full w-full items-center justify-center flex-1">
+        <div className="bg-white p-6 rounded-xl">
+          <TopNav />
+          <OutLetPage />
         </div>
       </div>
     </main>
