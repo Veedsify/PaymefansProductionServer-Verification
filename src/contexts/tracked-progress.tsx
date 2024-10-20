@@ -25,7 +25,7 @@ export const useTrackedProgress = create<TrackedProgressType>()(
      }),
           {
                name: 'tract-progress',
-               storage: createJSONStorage(() => localStorage),
+               storage: createJSONStorage(() => sessionStorage),
           }
      )
 );

@@ -5,7 +5,7 @@ import AcceptCamera from "./acceptcamera";
 import SelectCountry from "./selectcountry";
 import SelectDocumentType from "./selectdocumenttype";
 import { useEffect, useState } from "react";
-import { LucideLoader, LucideLoader2 } from "lucide-react";
+import { LucideLoader } from "lucide-react";
 
 const OutLetPage = () => {
      const { agreedToTerms, agreedToCamera, selectCountry, documentType } = useTrackedProgress()
@@ -21,10 +21,10 @@ const OutLetPage = () => {
           }
      }, [])
 
-     if(loading) {
+     if (loading) {
           return (
                <div className="flex items-center justify-center w-80">
-                    <LucideLoader size={32} className="animate-spin duration-200"/>
+                    <LucideLoader size={32} className="animate-spin duration-200" />
                </div>
           )
      }
@@ -53,6 +53,7 @@ const OutLetPage = () => {
                <SelectDocumentType />
           )
      }
+
 
 }
 
