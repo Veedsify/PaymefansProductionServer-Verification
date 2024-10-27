@@ -1,14 +1,15 @@
 "use client"
 
 import { useTrackedProgress } from "@/contexts/tracked-progress";
+import { dataURLtoBlob } from "@/utils/dataUrlToBlob";
 import { LucideLoader } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const UploadDocumentBack = () => {
-     const { documentType, setUploadDocument } = useTrackedProgress()
+     const { documentType, setUploadDocument, updateVerificationData } = useTrackedProgress()
      const [canContinue, setCanContinue] = useState<boolean>(false);
      const [processing, setProcessing] = useState<boolean>(false);
-     const [error, setError] = useState<{status: boolean, message: string} | null>({
+     const [error, setError] = useState<{ status: boolean, message: string } | null>({
           status: false,
           message: ''
      });
@@ -22,15 +23,15 @@ const UploadDocumentBack = () => {
                video.pause();
                canvas.width = video.videoWidth;
                canvas.height = video.videoHeight;
-               canvas.getContext('2d')?.drawImage(video, 0, 0, canvas.width, canvas.height);
-               const data = canvas.toDataURL('image/png');
-               console.log(data);
-               // setError({
-               //      status: true,
-               //      message: 'An error occured while processing the image'
-               // });
+               // Draw the image from the video onto the canvas
+               const context = canvas.getContext('2d');
+               context?.drawImage(video, 0, 0, canvas.width, canvas.height);
+               // Get the data URL from the canvas
+               const dataURL = canvas.toDataURL('image/png');
+               // Optional: Convert Blob to File if needed
                video.play();
                setUploadDocument(true, true)
+               updateVerificationData("back", dataURL)
                setProcessing(false)
           }
      }, [])

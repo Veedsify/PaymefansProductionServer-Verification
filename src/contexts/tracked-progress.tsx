@@ -14,9 +14,9 @@ type TrackedProgressType = {
           terms: boolean;
           country: string | null;
           documentType: string | null;
-          front: Blob | null;
-          back: Blob | null;
-          faceVideo: Blob | null;
+          front: string | null;
+          back: string | null;
+          faceVideo: string | null;
      }
      setToken: (value: string) => void;
      updateVerificationData: (key: string, value: string | Blob) => void;

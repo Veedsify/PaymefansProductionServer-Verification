@@ -2,10 +2,11 @@
 import { useTrackedProgress } from "@/contexts/tracked-progress";
 import { useEffect, useState } from "react";
 const SelectDocumentType = () => {
-     const { setDocumentType } = useTrackedProgress()
+     const { setDocumentType, updateVerificationData } = useTrackedProgress()
      const [document, setDocument] = useState<string | null>(null);
      useEffect(() => {
           const handleCountryChange = () => {
+               updateVerificationData("documentType", document as string);
                setDocumentType(document as string);
           }
           handleCountryChange();

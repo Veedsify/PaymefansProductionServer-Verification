@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Instrument_Sans } from "next/font/google"
 import "./globals.css";
+import { Toaster } from "react-hot-toast";
 
 const font = Instrument_Sans({
   display: "swap",
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body
         className={`${font.className} antialiased`}
       >
+        <Toaster />
         {children}
       </body>
     </html>

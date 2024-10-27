@@ -2,11 +2,11 @@
 import { useTrackedProgress } from "@/contexts/tracked-progress";
 import { LucideLoader } from "lucide-react";
 import { useEffect, useRef, useState, useCallback } from "react";
-import { RekognitionClient, DetectFacesCommand } from "@aws-sdk/client-rekognition";
 import handleMediaProcessing from "@/utils/handleMediaProcessing";
 import toast from "react-hot-toast";
+
 const FaceVerification = () => {
-     const { documentType, setUploadDocument, updateVerificationData } = useTrackedProgress();
+     const { updateVerificationData } = useTrackedProgress();
      const [canContinue, setCanContinue] = useState<boolean>(false);
      const [processing, setProcessing] = useState<boolean>(false);
      const [error, setError] = useState<{ status: boolean; message: string } | null>(null);
@@ -14,17 +14,10 @@ const FaceVerification = () => {
      const mediaRecorderRef = useRef<MediaRecorder | null>(null);
      const recordedChunks = useRef<Blob[]>([]);
      const faceDetectedRef = useRef<boolean>(false);
-     // Configure AWS Rekognition
-     const rekognitionClient = new RekognitionClient({
-          region: process.env.NEXT_PUBLIC_AWS_REGION,
-          credentials: {
-               accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID as string,
-               secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY as string,
-          },
-     });
      useEffect(() => {
           const handleResize = () => {
-               setCanContinue(window.innerWidth >= 768);
+               // setCanContinue(window.innerWidth >= 768);
+               setCanContinue(true);
           };
           handleResize();
           window.addEventListener('resize', handleResize);
@@ -63,7 +56,7 @@ const FaceVerification = () => {
                setTimeout(() => {
                     console.log('Stopping recording');
                     stopRecording();
-               }, 4000);
+               }, process.env.NEXT_PUBLIC_FACE_VERIFICATION_DURATION as unknown as number);
           }
      }, []);
      const stopRecording = useCallback(() => {
@@ -76,7 +69,11 @@ const FaceVerification = () => {
                setProcessing(true)
                videoRef.current?.pause();
                const blob = new Blob(recordedChunks.current, { type: 'video/webm' });
-               updateVerificationData('faceVideo', blob);
+               const fileReader = new FileReader();
+               fileReader.readAsDataURL(blob);
+               fileReader.onloadend = async () => {
+                    updateVerificationData('faceVideo', fileReader.result as string);
+               }
                const uploadMediaForVerification = await handleMediaProcessing();
                if (uploadMediaForVerification.status === true) {
                     toast.success('Verification Successful');

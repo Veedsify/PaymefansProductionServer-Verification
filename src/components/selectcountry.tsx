@@ -3,9 +3,10 @@ import { useTrackedProgress } from "@/contexts/tracked-progress";
 import { countries } from "@/utils/countries";
 import { ChangeEvent, useEffect, useState } from "react";
 const SelectCountry = () => {
-     const { setSelectCountry } = useTrackedProgress()
+     const { setSelectCountry, updateVerificationData } = useTrackedProgress()
      const handleCountryChange = (e: ChangeEvent<HTMLSelectElement>) => {
           const country = e.target.value;
+          updateVerificationData("country", country as string);
           setSelectCountry(country as string);
      }
      return (
