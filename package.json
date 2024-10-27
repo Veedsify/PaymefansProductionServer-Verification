@@ -9,10 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-rekognition": "^3.679.0",
+    "axios": "^1.7.7",
     "lucide-react": "^0.451.0",
     "next": "14.2.15",
     "react": "^18",
     "react-dom": "^18",
+    "react-hot-toast": "^2.4.1",
     "zustand": "^5.0.0-rc.2"
   },
   "devDependencies": {

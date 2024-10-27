@@ -6,9 +6,12 @@ import SelectCountry from "./selectcountry";
 import SelectDocumentType from "./selectdocumenttype";
 import { useEffect, useState } from "react";
 import { LucideLoader } from "lucide-react";
+import UploadDocumentFront from "./uploaddocumentfront";
+import UploadDocumentBack from "./uploaddocumentback";
+import FaceVerification from "./faceverification";
 
 const OutLetPage = () => {
-     const { agreedToTerms, agreedToCamera, selectCountry, documentType } = useTrackedProgress()
+     const { uploadDocumentBack, faceVerification, uploadDocumentFront, agreedToTerms, agreedToCamera, selectCountry, documentType } = useTrackedProgress()
      const [loading, setLoading] = useState<boolean>(true);
 
      useEffect(() => {
@@ -54,6 +57,17 @@ const OutLetPage = () => {
           )
      }
 
+     if (!uploadDocumentFront) {
+          return <UploadDocumentFront />
+     }
+
+     if (!uploadDocumentBack) {
+          return <UploadDocumentBack />
+     }
+
+     if (!faceVerification) {
+          return <FaceVerification />
+     }
 
 }
 

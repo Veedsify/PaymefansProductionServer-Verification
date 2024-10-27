@@ -1,7 +1,15 @@
+"use client"
 import OutLetPage from "@/components/outletpage";
 import TopNav from "@/components/topnav";
+import { useTrackedProgress } from "@/contexts/tracked-progress";
+import { useEffect } from "react";
 
-export default function Home() {
+export default function Home({ params }: { params: { token: string } }) {
+  const { setToken } = useTrackedProgress();
+  useEffect(() => {
+    setToken(params.token);
+  }, [params.token]);   
+
   return (
     <main
       className="w-full bg-slate-950 min-h-screen flex flex-col"
