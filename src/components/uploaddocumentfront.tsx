@@ -83,7 +83,7 @@ const UploadDocumentFront = () => {
                     <div
                          className="absolute top-0 left-0 w-full h-full flex inset-0 items-center justify-center"
                     >
-                         <img src="/frame.png" className="invert block mx-auto origin-center" alt="" />
+                         <img src="/frame.png" className="block origin-center" alt="" />
                          {processing && (
                               <div className="absolute bg-black bg-opacity-50 w-full h-full flex items-center justify-center">
                                    <LucideLoader size={32} className="animate-spin duration-200" stroke="#fff" />
