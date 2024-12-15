@@ -25,11 +25,11 @@ const SelectDocumentType = () => {
                          <span className="pl-4 font-bold">Passport</span>
                     </label>
                     <label htmlFor="id" className="px-2 py-4 duration-200 cursor-pointer hover:bg-gray-50 rounded-xl flex items-center">
-                         <input type="radio" className="w-6 h-6 accent-purple-500" id="national id" name="document" value="id" onClick={() => setDocument("id")} />
-                         <span className="pl-4 font-bold">ID</span>
+                         <input type="radio" className="w-6 h-6 accent-purple-500" id="national_id" name="document" value="national_id" onClick={() => setDocument("national_id")} />
+                         <span className="pl-4 font-bold">National ID</span>
                     </label>
                     <label htmlFor="driver" className="px-2 py-4 duration-200 cursor-pointer hover:bg-gray-50 rounded-xl flex items-center">
-                         <input type="radio" className="w-6 h-6 accent-purple-500" id="drivers lisense" name="document" value="driver" onClick={() => setDocument("driver")} />
+                         <input type="radio" className="w-6 h-6 accent-purple-500" id="drivers_license" name="document" value="drivers_license" onClick={() => setDocument("drivers_license")} />
                          <span className="pl-4 font-bold">Driver's License</span>
                     </label>
                </form>
