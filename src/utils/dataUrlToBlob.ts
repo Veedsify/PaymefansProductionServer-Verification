@@ -11,3 +11,8 @@ export function dataURLtoBlob(dataURL: any) {
 
     return new Blob([new Uint8Array(array)], { type: mime });
 }
+
+export function bufferToBlob(buffer: Buffer, mimeType: string = 'application/octet-stream'): Blob {
+    return new Blob([buffer], { type: mimeType });
+}
+

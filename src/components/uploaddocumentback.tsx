@@ -23,16 +23,27 @@ const UploadDocumentBack = () => {
                video.pause();
                canvas.width = video.videoWidth;
                canvas.height = video.videoHeight;
-               // Draw the image from the video onto the canvas
-               const context = canvas.getContext('2d');
-               context?.drawImage(video, 0, 0, canvas.width, canvas.height);
-               // Get the data URL from the canvas
-               const dataURL = canvas.toDataURL('image/png');
-               // Optional: Convert Blob to File if needed
+               // Draw the current frame onto the canvas
+               const ctx = canvas.getContext('2d');
+               ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+               
+               canvas.toBlob(
+                    (blob) => {
+                      if (blob) {
+                        const fileReader = new FileReader();
+                        fileReader.readAsDataURL(blob);
+                        fileReader.onloadend = async () => {
+                          updateVerificationData("back", fileReader.result as string);
+                          // Now send this buffer to the backend or AWS Rekognition
+                          setUploadDocument(true, true);
+                          setProcessing(false);
+                        };
+                      }
+                    },
+                    "image/png",
+                    1
+                  );            
                video.play();
-               setUploadDocument(true, true)
-               updateVerificationData("back", dataURL)
-               setProcessing(false)
           }
      }, [])
 

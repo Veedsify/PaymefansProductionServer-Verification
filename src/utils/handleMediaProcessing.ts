@@ -1,7 +1,7 @@
 "use client"
 import { useTrackedProgress } from "@/contexts/tracked-progress";
 import axios from "axios";
-import { dataURLtoBlob } from "./dataUrlToBlob";
+import { bufferToBlob, dataURLtoBlob } from "./dataUrlToBlob";
 const { verificationData, token, agreedToTerms } = useTrackedProgress.getState();
 
 const handleMediaProcessing = async () => {

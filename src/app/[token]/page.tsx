@@ -2,9 +2,11 @@
 import OutLetPage from "@/components/outletpage";
 import TopNav from "@/components/topnav";
 import { useTrackedProgress } from "@/contexts/tracked-progress";
+import { useParams } from "next/navigation";
 import { useCallback, useEffect } from "react";
 
-export default function Home({ params }: { params: { token: string } }) {
+export default function Home() {
+  const params = useParams()
   const { setToken } = useTrackedProgress();
   const setModelToken = useCallback(() => {
     if (params.token !== undefined && params.token !== null) {
