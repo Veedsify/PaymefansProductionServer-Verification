@@ -66,6 +66,7 @@ const FaceVerification = () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
     }
+    window.location.href = process.env.NEXT_PUBLIC_MAIN_SITE as string;
   }, []);
   const handleStopRecording = async () => {
     if (mediaRecorderRef.current?.state === "inactive") {
