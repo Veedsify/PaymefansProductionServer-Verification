@@ -1,48 +1,57 @@
 "use client"
-import { useTrackedProgress } from "@/contexts/tracked-progress";
+import {useTrackedProgress} from "@/contexts/tracked-progress";
 import axios from "axios";
-import { bufferToBlob, dataURLtoBlob } from "./dataUrlToBlob";
-const { verificationData, token, agreedToTerms } = useTrackedProgress.getState();
+import localforage from "localforage";
+import {toast} from "react-hot-toast";
+import {dataURLtoBlob} from "./dataUrlToBlob";
 
 const handleMediaProcessing = async () => {
-     try {
-          const formData = new FormData();
+    const {verificationData, token, agreedToTerms} = useTrackedProgress.getState();
+    try {
+        const formData = new FormData();
 
-          if (verificationData.front) {
-               const front = dataURLtoBlob(verificationData.front);
-               formData.append('front', front);
-          }
-          if (verificationData.back) {
-               const back = dataURLtoBlob(verificationData.back);
-               formData.append('back', back);
-          }
-          if (verificationData.faceVideo) {
-               const faceVideo = dataURLtoBlob(verificationData.faceVideo);
-               formData.append('faceVideo', faceVideo);
-          }
-          if (verificationData.country) formData.append('country', verificationData.country);
-          if (verificationData.documentType) formData.append('documentType', verificationData.documentType);
-          if (agreedToTerms) formData.append('terms', 'true');
+        const front = await localforage.getItem('front');
+        const back = await localforage.getItem('back');
+        const faceVideo = await localforage.getItem('faceVideo');
 
-          console.log(formData.entries())
+        if (!faceVideo && !front && !back) {
+            toast.error("Sorry, Some Of Your Documents Are Missing");
+            return;
+        }
 
-          const SendForVerification = await axios.post(
-               `${process.env.NEXT_PUBLIC_VERIFICATION_ENDPOINT}/process/${token}`,
-               formData
-          );
+        if (front) {
+            const frontData = dataURLtoBlob(front);
+            formData.append('front', frontData);
+        }
+        if (back) {
+            const backData = dataURLtoBlob(back);
+            formData.append('back', backData);
+        }
+        if (faceVideo) {
+            const faceVideoData = dataURLtoBlob(faceVideo);
+            formData.append('faceVideo', faceVideoData);
+        }
 
-          if (SendForVerification.data.status === true) {
-               console.log('Verification data sent successfully');
-               return SendForVerification.data
-          } else {
-               console.log(SendForVerification.data);
-               return SendForVerification.data
-          }
 
-     } catch (error) {
-          console.error(error);
-          return false
-     }
+        if (verificationData.country) formData.append('country', verificationData.country);
+        if (verificationData.documentType) formData.append('documentType', verificationData.documentType);
+        if (agreedToTerms) formData.append('terms', 'true');
+
+        const SendForVerification = await axios.post(
+            `${process.env.NEXT_PUBLIC_VERIFICATION_ENDPOINT}/process/${token}`,
+            formData
+        );
+
+        return SendForVerification.data
+
+    } catch (error: any) {
+        console.error(error);
+        toast.error(error?.response?.data?.message || error.message);
+        await localforage.removeItem('front');
+        await localforage.removeItem('back');
+        await localforage.removeItem('faceVideo');
+        throw new Error("Error processing media");
+    }
 }
 
 export default handleMediaProcessing;

@@ -1,12 +1,12 @@
 "use client";
 
 import { useTrackedProgress } from "@/contexts/tracked-progress";
-import { dataURLtoBlob } from "@/utils/dataUrlToBlob";
 import { LucideLoader } from "lucide-react";
+import localforage from 'localforage';
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const UploadDocumentFront = () => {
-  const { documentType, setUploadDocument, updateVerificationData } =
+  const { documentType, setUploadDocument } =
     useTrackedProgress();
   const [canContinue, setCanContinue] = useState<boolean>(false);
   const [processing, setProcessing] = useState<boolean>(false);
@@ -39,7 +39,8 @@ const UploadDocumentFront = () => {
             const fileReader = new FileReader();
             fileReader.readAsDataURL(blob);
             fileReader.onloadend = async () => {
-              updateVerificationData("front", fileReader.result as string);
+              // Store an image
+              await localforage.setItem('front', fileReader.result);
               // Now send this buffer to the backend or AWS Rekognition
               setUploadDocument(true, false);
               setProcessing(false);

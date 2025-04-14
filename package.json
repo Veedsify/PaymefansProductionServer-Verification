@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "next dev --turbo --port=3002",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -11,6 +11,7 @@
   "dependencies": {
     "@aws-sdk/client-rekognition": "^3.699.0",
     "axios": "^1.7.8",
+    "localforage": "^1.10.0",
     "lucide-react": "^0.451.0",
     "next": "14.2.15",
     "react": "^18.3.1",

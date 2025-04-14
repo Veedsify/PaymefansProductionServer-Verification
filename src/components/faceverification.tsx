@@ -1,6 +1,7 @@
 "use client";
 import { useTrackedProgress } from "@/contexts/tracked-progress";
 import { LucideLoader } from "lucide-react";
+import localforage from "localforage";
 import { useEffect, useRef, useState, useCallback } from "react";
 import handleMediaProcessing from "@/utils/handleMediaProcessing";
 import toast from "react-hot-toast";
@@ -16,7 +17,6 @@ const FaceVerification = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunks = useRef<Blob[]>([]);
-  const faceDetectedRef = useRef<boolean>(false);
   useEffect(() => {
     const handleResize = () => {
       // setCanContinue(window.innerWidth >= 768);
@@ -28,47 +28,8 @@ const FaceVerification = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
-  useEffect(() => {
-    if (!canContinue) return;
-    const startVideo = async () => {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-        startRecording();
-      }
-    };
-    startVideo();
-  }, [canContinue]);
-  const startRecording = useCallback(() => {
-    if (videoRef.current) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      mediaRecorderRef.current = new MediaRecorder(stream);
-      recordedChunks.current = []; // Reset the recorded chunks
-      mediaRecorderRef.current.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          recordedChunks.current.push(event.data);
-        }
-      };
-      mediaRecorderRef.current.onstop = handleStopRecording;
-      mediaRecorderRef.current.start();
-      console.log("Recording started");
-      // Stop recording after 10 seconds
-      setTimeout(() => {
-        console.log("Stopping recording");
-        stopRecording();
-      }, process.env.NEXT_PUBLIC_FACE_VERIFICATION_DURATION as unknown as number);
-    }
-  }, []);
-  const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
-    }
-    window.location.href = process.env.NEXT_PUBLIC_MAIN_SITE as string;
-  }, []);
-  const handleStopRecording = async () => {
+
+  const handleStopRecording = useCallback(async () => {
     if (mediaRecorderRef.current?.state === "inactive") {
       setProcessing(true);
       if (videoRef.current) {
@@ -89,10 +50,7 @@ const FaceVerification = () => {
               const fileReader = new FileReader();
               fileReader.readAsDataURL(blob);
               fileReader.onloadend = async () => {
-                updateVerificationData(
-                  "faceVideo",
-                  fileReader.result as string
-                );
+                await localforage.setItem("faceVideo", fileReader.result);
               };
             }
           },
@@ -102,19 +60,66 @@ const FaceVerification = () => {
       }
 
       const uploadMediaForVerification = await handleMediaProcessing();
-      if (uploadMediaForVerification.status === true) {
-        toast.success("Verification Successful");
+      if (!uploadMediaForVerification.error) {
+        toast.success("Verification Received");
         setProcessing(false);
         sessionStorage.clear();
-        window.location.href = `${process.env.NEXT_PUBLIC_MAIN_SITE}`;
+        window.location.href = `${process.env.NEXT_PUBLIC_MAIN_SITE}/verification/success/${uploadMediaForVerification.token}`;
+        return;
       } else {
         setError({
           status: true,
-          message: "An error occurred while uploading the video",
+          message: uploadMediaForVerification.message,
         });
+        window.location.href = `${process.env.NEXT_PUBLIC_MAIN_SITE}/verification/failed/${uploadMediaForVerification.token}`;
+        return;
       }
     }
-  };
+  }, [updateVerificationData]);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+    }
+    // window.location.href = process.env.NEXT_PUBLIC_MAIN_SITE as string;
+  }, []);
+
+  const startRecording = useCallback(() => {
+    if (videoRef.current) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      recordedChunks.current = []; // Reset the recorded chunks
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunks.current.push(event.data);
+        }
+      };
+      mediaRecorderRef.current.onstop = handleStopRecording;
+      mediaRecorderRef.current.start();
+      console.log("Recording started");
+      // Stop recording after 10 seconds
+      setTimeout(() => {
+        console.log("Stopping recording");
+        stopRecording();
+      }, process.env.NEXT_PUBLIC_FACE_VERIFICATION_DURATION as unknown as number);
+    }
+  }, [handleStopRecording, stopRecording]);
+
+  useEffect(() => {
+    if (!canContinue) return;
+    const startVideo = async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" },
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+        startRecording();
+      }
+    };
+    startVideo();
+  }, [canContinue, startRecording]);
+
   if (!canContinue) {
     return (
       <div className="flex flex-col items-center justify-center space-y-4 max-w-80">

@@ -42,10 +42,6 @@ const TopNav = () => {
                                    <div className="flex flex-col items-center justify-center space-y-4">
                                         <button className="text-gray-900 hover:bg-purple-50 text-sm font-medium p-4 py-2 rounded-xl">English
                                         </button>
-                                        <button className="text-gray-900 hover:bg-purple-50 text-sm font-medium p-4 py-2 rounded-xl">Español
-                                        </button>
-                                        <button className="text-gray-900 hover:bg-purple-50 text-sm font-medium p-4 py-2 rounded-xl">Français
-                                        </button>
                                    </div>
                               </div>
                          </div>
