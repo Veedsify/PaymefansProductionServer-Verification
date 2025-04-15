@@ -25,7 +25,6 @@ export default function Home() {
 
         try {
 
-
             // Check if the token is valid
             const response = await axios.post(`${process.env.NEXT_PUBLIC_VERIFICATION_ENDPOINT}/verify-token`, {
                 token: params.token
@@ -57,7 +56,7 @@ export default function Home() {
     if (isLoading) {
         return (
             <div className="flex flex-col h-full w-full items-center justify-center bg-slate-950 min-h-screen">
-                <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full flex flex-col items-center">
+                <div className="bg-white p-8 rounded-xl shadow-lg max-w-80 w-full flex flex-col items-center">
                     <TopNav/>
                     <div className="flex items-center justify-center w-80">
                         <LucideLoader size={32} className="animate-spin duration-200"/>
@@ -74,7 +73,7 @@ export default function Home() {
     if (!isValid) {
         return (
             <div className="flex flex-col h-full w-full items-center justify-center bg-slate-950 min-h-screen">
-                <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full">
+                <div className="bg-white p-8 rounded-xl shadow-lg max-w-80 w-full">
                     <TopNav/>
                     <h1 className="text-2xl font-bold text-gray-800 mb-4">Token is invalid</h1>
                     <p className="text-gray-600 mb-6">Your verification has expired or is invalid. Please verify

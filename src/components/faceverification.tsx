@@ -64,14 +64,14 @@ const FaceVerification = () => {
         toast.success("Verification Received");
         setProcessing(false);
         sessionStorage.clear();
-        window.location.href = `${process.env.NEXT_PUBLIC_MAIN_SITE}/verification/success/${uploadMediaForVerification.token}`;
+        window.location.href = `/verification/success/${uploadMediaForVerification.token}`;
         return;
       } else {
         setError({
           status: true,
           message: uploadMediaForVerification.message,
         });
-        window.location.href = `${process.env.NEXT_PUBLIC_MAIN_SITE}/verification/failed/${uploadMediaForVerification.token}`;
+        window.location.href = `/verification/failed/${uploadMediaForVerification.token}`;
         return;
       }
     }
