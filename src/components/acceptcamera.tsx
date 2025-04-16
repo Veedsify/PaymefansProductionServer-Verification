@@ -45,7 +45,7 @@ const AcceptCamera = () => {
                     Your Camera and Microphone
                </h1>
                <h3 className="text-wrap text-purple-600 text-sm">
-                    You'll see a popup asking you to allow access to your camera and microphone. Please be sure to click allow.
+                    You&apos;ll see a popup asking you to allow access to your camera and microphone. Please be sure to click allow.
                </h3>
                <div>
                     <video

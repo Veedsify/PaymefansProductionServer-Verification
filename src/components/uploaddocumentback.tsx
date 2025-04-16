@@ -46,7 +46,7 @@ const UploadDocumentBack = () => {
             );
             video.play();
         }
-    }, [])
+    }, [setUploadDocument])
 
     const canContinueHandler = useCallback(() => {
         const width = window.innerWidth
@@ -72,7 +72,7 @@ const UploadDocumentBack = () => {
 
     useEffect(() => {
         canContinueHandler();
-    }, [])
+    }, [canContinueHandler])
 
     if (!canContinue) {
         return (

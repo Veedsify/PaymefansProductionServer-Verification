@@ -1,5 +1,4 @@
 "use client";
-import { useTrackedProgress } from "@/contexts/tracked-progress";
 import { LucideLoader } from "lucide-react";
 import localforage from "localforage";
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -7,7 +6,6 @@ import handleMediaProcessing from "@/utils/handleMediaProcessing";
 import toast from "react-hot-toast";
 
 const FaceVerification = () => {
-  const { updateVerificationData } = useTrackedProgress();
   const [canContinue, setCanContinue] = useState<boolean>(false);
   const [processing, setProcessing] = useState<boolean>(false);
   const [error, setError] = useState<{
@@ -75,7 +73,7 @@ const FaceVerification = () => {
         return;
       }
     }
-  }, [updateVerificationData]);
+  }, [setProcessing]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current) {

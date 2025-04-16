@@ -4,6 +4,7 @@ import { useTrackedProgress } from "@/contexts/tracked-progress";
 import { LucideLoader } from "lucide-react";
 import localforage from 'localforage';
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 
 const UploadDocumentFront = () => {
   const { documentType, setUploadDocument } =
@@ -53,7 +54,7 @@ const UploadDocumentFront = () => {
 
       video.play();
     }
-  }, []);
+  }, [setUploadDocument]);
 
   const canContinueHandler = useCallback(() => {
     const width = window.innerWidth;
@@ -82,7 +83,7 @@ const UploadDocumentFront = () => {
 
   useEffect(() => {
     canContinueHandler();
-  }, []);
+  }, [canContinueHandler]);
 
   if (canContinue === false) {
     return (
@@ -112,7 +113,7 @@ const UploadDocumentFront = () => {
           className="w-full h-full object-cover"
         />
         <div className="absolute top-0 left-0 w-full h-full flex inset-0 items-center justify-center">
-          <img src="/frame.png" className="block origin-center" alt="" />
+          <Image width={1000} height={1000} src="/frame.png" className="block origin-center" alt="" />
           {processing && (
             <div className="absolute bg-black bg-opacity-50 w-full h-full flex items-center justify-center">
               <LucideLoader

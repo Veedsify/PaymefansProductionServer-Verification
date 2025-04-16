@@ -10,7 +10,7 @@ const SelectDocumentType = () => {
                setDocumentType(document as string);
           }
           handleCountryChange();
-     }, [document])
+     }, [document, setDocumentType, updateVerificationData]);
      return (
           <div className="flex flex-col items-center justify-center space-y-4 max-w-80">
                <h1 className="text-2xl font-bold text-slate-950 text-center">
@@ -30,7 +30,7 @@ const SelectDocumentType = () => {
                     </label>
                     <label htmlFor="driver" className="px-2 py-4 duration-200 cursor-pointer hover:bg-gray-50 rounded-xl flex items-center">
                          <input type="radio" className="w-6 h-6 accent-purple-500" id="drivers_license" name="document" value="drivers_license" onClick={() => setDocument("drivers_license")} />
-                         <span className="pl-4 font-bold">Driver's License</span>
+                         <span className="pl-4 font-bold">Driver&apos;s License</span>
                     </label>
                </form>
                <button className="text-slate-950 text-sm">

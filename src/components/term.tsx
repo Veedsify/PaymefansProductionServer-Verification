@@ -20,9 +20,9 @@ const TermsComponent = () => {
                     To get started, please read and agree to the following:
                </h3>
                <p className="text-slate-950  text-sm h-[200px] overflow-auto leading-relaxed border p-1">
-                    By clicking “Agree and Continue” I consent to Company and its service provider, Paymefans, obtaining and disclosing a scan of my face geometry and barcode of my ID for the purpose of verifying my identity pursuant to Company and Paymefans's Privacy Policies and for improving and updating Paymefans products or services (including its algorithm). Company and Paymefans shall store the biometric data for no longer than 3 years (or as determined by your local regulation).
-                    I can exercise my privacy rights, including withdrawal of my consent, by contacting dataprotection@Paymefans.com.
-                    I have read and agreed to Paymefans’s
+                    By clicking “Agree and Continue” I consent to Company and its service provider, Paymefans, obtaining and disclosing a scan of my face geometry and barcode of my ID for the purpose of verifying my identity pursuant to Company and Paymefans&apos;s Privacy Policies and for improving and updating Paymefans products or services (including its algorithm). Company and Paymefans shall store the biometric data for no longer than 3 years (or as determined by your local regulation).
+                    I can exercise my privacy rights, including withdrawal of my consent, by contacting support@Paymefans.com.
+                    I have read and agreed to Paymefans&apos;s
                </p>
                <button
                     onClick={agreeToTerms}

@@ -1,7 +1,7 @@
 "use client";
 import { useTrackedProgress } from "@/contexts/tracked-progress";
 import { countries } from "@/utils/countries";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent } from "react";
 const SelectCountry = () => {
   const { setSelectCountry, updateVerificationData } = useTrackedProgress();
   const handleCountryChange = (e: ChangeEvent<HTMLSelectElement>) => {
