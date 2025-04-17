@@ -4,12 +4,11 @@ import TopNav from "@/components/topnav";
 import { useParams } from "next/navigation";
 import { LucideLoader } from "lucide-react";
 import { useEffect, useState } from "react";
-import axios from "axios";
 
 export default function Home() {
   const params = useParams();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isValid, setIsValid] = useState(false);
+  const [isLoading] = useState(false);
+  const [isValid] = useState(false);
 
   console.log("Params", params);
 
