@@ -97,9 +97,9 @@ export default function Home() {
 
     // Valid token component
     return (
-        <main className="w-full bg-slate-950 min-h-screen flex flex-col">
+        <main className="w-full bg-slate-950 min-h-screen flex flex-col p-3">
             <div className="flex flex-col h-full w-full items-center justify-center flex-1">
-                <div className="bg-white p-6 rounded-xl">
+                <div className="bg-white p-2 md:p-6 rounded-xl">
                     <TopNav/>
                     <OutLetPage/>
                 </div>
