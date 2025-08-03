@@ -56,30 +56,30 @@ const SelectDocumentType = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-6 max-w-md mx-auto p-2 md:p-6">
+    <div className="flex flex-col items-center justify-center max-w-md p-2 mx-auto space-y-6 md:p-6">
       {/* Header */}
       <div className="text-center space-y-3">
-        <div className="mx-auto w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-4">
+        <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-purple-500 to-pink-500">
           <CreditCard className="w-8 h-8 text-white" />
         </div>
         <h1 className="text-2xl font-bold text-slate-950">
           Select Document Type
         </h1>
-        <p className="text-slate-600 text-sm leading-relaxed">
+        <p className="text-sm leading-relaxed text-slate-600">
           Choose the type of government-issued document you&apos;ll be using for
           verification
         </p>
       </div>
 
       {/* Info Box */}
-      <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
         <div className="flex items-start gap-3">
           <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm text-blue-800 font-medium">
+            <p className="text-sm font-medium text-blue-800">
               Document Requirements
             </p>
-            <p className="text-xs text-blue-700 mt-1">
+            <p className="mt-1 text-xs text-blue-700">
               Ensure your document is valid, unexpired, and contains clear,
               readable text
             </p>
@@ -115,12 +115,12 @@ const SelectDocumentType = () => {
                     {option.label}
                   </h3>
                   {option.recommended && (
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                    <span className="px-2 py-1 text-xs text-green-800 bg-green-100 rounded-full">
                       Recommended
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-slate-600 mt-1">
+                <p className="mt-1 text-sm text-slate-600">
                   {option.description}
                 </p>
               </div>
@@ -141,7 +141,7 @@ const SelectDocumentType = () => {
       </div>
 
       {error && (
-        <div className="w-full bg-red-50 border border-red-200 rounded-lg p-3">
+        <div className="w-full p-3 border border-red-200 rounded-lg bg-red-50">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-red-600" />
             <p className="text-sm text-red-800">{error}</p>
@@ -151,11 +151,11 @@ const SelectDocumentType = () => {
 
       {/* Additional Info */}
       {document && (
-        <div className="w-full bg-green-50 border border-green-200 rounded-lg p-4">
+        <div className="w-full p-4 border border-green-200 rounded-lg bg-green-50">
           <div className="flex items-start gap-3">
             <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm text-green-800 font-medium">
+              <p className="text-sm font-medium text-green-800">
                 {document === "national_id" &&
                   "You will need to upload both front and back of your ID"}
                 {document === "passport" &&
@@ -169,9 +169,9 @@ const SelectDocumentType = () => {
       )}
 
       {/* Action Buttons */}
-      <div className="w-full flex gap-3 pt-4">
+      <div className="flex w-full pt-4 gap-3">
         <button
-          className="flex-1 px-4 py-2 text-sm text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+          className="flex-1 px-4 py-2 text-sm border rounded-lg text-slate-600 border-slate-300 hover:bg-slate-50 transition-colors"
           onClick={() => window.history.back()}
         >
           Back

@@ -453,39 +453,39 @@ const FaceVerification = () => {
   // Loading/checking state
   if (hasPermission === null) {
     return (
-      <div className="flex flex-col items-center justify-center space-y-6 max-w-md mx-auto p-2 md:p-6">
-        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+      <div className="flex flex-col items-center justify-center max-w-md p-2 mx-auto space-y-6 md:p-6">
+        <div className="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full">
           <LucideLoader className="w-8 h-8 text-blue-600 animate-spin" />
         </div>
         <div className="text-center">
-          <h2 className="text-xl font-bold text-slate-950 mb-2">
+          <h2 className="mb-2 text-xl font-bold text-slate-950">
             Checking Camera Access
           </h2>
-          <p className="text-slate-600 text-sm">
+          <p className="text-sm text-slate-600">
             Please wait while we check for camera permissions...
           </p>
         </div>
 
         {/* Debug information in development mode */}
         {process.env.NODE_ENV === "development" && (
-          <div className="text-xs text-slate-400 bg-slate-50 p-3 rounded-lg w-full">
+          <div className="w-full p-3 text-xs rounded-lg text-slate-400 bg-slate-50">
             <p>Debug: Camera initialization in progress</p>
             <p>Stream available: {streamRef.current ? "Yes" : "No"}</p>
             <p>Video element ready: {videoRef.current ? "Yes" : "No"}</p>
-            <div className="flex gap-2 mt-2">
+            <div className="flex mt-2 gap-2">
               <button
                 onClick={() => {
                   console.log("Debug: Force setting permission to true");
                   setHasPermission(true);
                   setCanContinue(true);
                 }}
-                className="px-3 py-1 bg-yellow-200 text-yellow-800 rounded text-xs hover:bg-yellow-300"
+                className="px-3 py-1 text-xs text-yellow-800 bg-yellow-200 rounded hover:bg-yellow-300"
               >
                 Force Continue
               </button>
               <button
                 onClick={() => debugCameraSetup()}
-                className="px-3 py-1 bg-blue-200 text-blue-800 rounded text-xs hover:bg-blue-300"
+                className="px-3 py-1 text-xs text-blue-800 bg-blue-200 rounded hover:bg-blue-300"
               >
                 Debug Setup
               </button>
@@ -499,21 +499,21 @@ const FaceVerification = () => {
   // Permission denied state
   if (hasPermission === false) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen space-y-6 max-w-md mx-auto p-6">
-        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+      <div className="flex flex-col items-center justify-center max-w-md min-h-screen p-6 mx-auto space-y-6">
+        <div className="flex items-center justify-center w-16 h-16 bg-red-100 rounded-full">
           <AlertCircle className="w-8 h-8 text-red-600" />
         </div>
         <div className="text-center">
-          <h2 className="text-xl font-bold text-slate-950 mb-2">
+          <h2 className="mb-2 text-xl font-bold text-slate-950">
             Camera Access Required
           </h2>
-          <p className="text-slate-600 text-sm mb-4">
+          <p className="mb-4 text-sm text-slate-600">
             {error?.message ||
               "Please allow camera access to continue with face verification."}
           </p>
-          <div className="text-xs text-slate-500 bg-slate-50 p-3 rounded-lg">
-            <p className="font-medium mb-2">To enable camera access:</p>
-            <ul className="space-y-1 text-left">
+          <div className="p-3 text-xs rounded-lg text-slate-500 bg-slate-50">
+            <p className="mb-2 font-medium">To enable camera access:</p>
+            <ul className="text-left space-y-1">
               <li>
                 • Click the camera icon in your browser&apos;s address bar
               </li>
@@ -524,16 +524,16 @@ const FaceVerification = () => {
             </ul>
           </div>
         </div>
-        <div className="flex gap-3 w-full">
+        <div className="flex w-full gap-3">
           <button
             onClick={retryCamera}
-            className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            className="flex-1 px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors"
           >
             Try Again
           </button>
           <button
             onClick={() => window.location.reload()}
-            className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+            className="flex-1 px-4 py-2 border rounded-lg border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors"
           >
             Refresh Page
           </button>
@@ -554,29 +554,29 @@ const FaceVerification = () => {
 
   if (captureComplete) {
     return (
-      <div className="flex flex-col items-center justify-center max-w-md mx-auto p-6">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+      <div className="flex flex-col items-center justify-center max-w-md p-6 mx-auto">
+        <div className="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full">
           <CheckCircle className="w-8 h-8 text-green-600" />
         </div>
-        <div className="text-center my-6">
-          <h2 className="text-xl font-bold text-slate-950 mb-2">
+        <div className="my-6 text-center">
+          <h2 className="mb-2 text-xl font-bold text-slate-950">
             Face Captured Successfully!
           </h2>
-          <p className="text-slate-600 text-sm">
+          <p className="text-sm text-slate-600">
             Your face has been captured and will be used for verification.
           </p>
         </div>
 
         {/* Show loading state when submitting */}
         {isSubmitting && (
-          <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <div className="w-full p-4 mb-4 border border-blue-200 rounded-lg bg-blue-50">
             <div className="flex items-center gap-3">
-              <LucideLoader className="w-5 h-5 animate-spin text-blue-600" />
+              <LucideLoader className="w-5 h-5 text-blue-600 animate-spin" />
               <div>
-                <p className="text-sm text-blue-800 font-medium">
+                <p className="text-sm font-medium text-blue-800">
                   Submitting Verification
                 </p>
-                <p className="text-xs text-blue-700 mt-1">
+                <p className="mt-1 text-xs text-blue-700">
                   Please wait while we process your verification...
                 </p>
               </div>
@@ -586,23 +586,23 @@ const FaceVerification = () => {
 
         {/* Error Display */}
         {error?.status && !isSubmitting && (
-          <div className="w-full bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <div className="w-full p-4 mb-4 border border-red-200 rounded-lg bg-red-50">
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm text-red-800 font-medium">
+                <p className="text-sm font-medium text-red-800">
                   Submission Error
                 </p>
-                <p className="text-xs text-red-700 mt-1">{error.message}</p>
+                <p className="mt-1 text-xs text-red-700">{error.message}</p>
               </div>
             </div>
           </div>
         )}
 
-        <div className="flex gap-3 w-full">
+        <div className="flex w-full gap-3">
           <button
             onClick={resetCapture}
-            className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+            className="flex items-center justify-center flex-1 px-4 py-2 border rounded-lg border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors gap-2"
             disabled={isSubmitting}
           >
             <RotateCcw className="w-4 h-4" />
@@ -632,21 +632,21 @@ const FaceVerification = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-6 max-w-md mx-auto p-2 md:p-6">
+    <div className="flex flex-col items-center justify-center max-w-md p-2 mx-auto space-y-6 md:p-6">
       {/* Header */}
       <div className="text-center space-y-3">
-        <div className="mx-auto w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mb-4">
+        <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-green-500 to-blue-500">
           <Camera className="w-8 h-8 text-white" />
         </div>
         <h1 className="text-2xl font-bold text-slate-950">Face Verification</h1>
-        <p className="text-slate-600 text-sm leading-relaxed">
+        <p className="text-sm leading-relaxed text-slate-600">
           Look directly at the camera and follow the instructions
         </p>
       </div>
 
       {/* Instructions */}
-      <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="text-sm font-medium text-blue-900 mb-2">
+      <div className="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
+        <h3 className="mb-2 text-sm font-medium text-blue-900">
           Instructions:
         </h3>
         <ul className="text-xs text-blue-800 space-y-1">
@@ -666,7 +666,7 @@ const FaceVerification = () => {
           muted
           playsInline
           controls={false}
-          className="w-full h-full object-cover"
+          className="object-cover w-full h-full"
         />
 
         {/* Overlay Elements */}
@@ -677,14 +677,14 @@ const FaceVerification = () => {
 
         {/* Countdown */}
         {countdown > 0 && (
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="text-6xl font-bold text-white">{countdown}</div>
           </div>
         )}
 
         {/* Recording Indicator */}
         {isRecording && (
-          <div className="absolute top-4 right-4 flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm">
+          <div className="absolute flex items-center px-3 py-1 text-sm text-white bg-red-500 rounded-full top-4 right-4 gap-2">
             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
             Recording...
           </div>
@@ -692,9 +692,9 @@ const FaceVerification = () => {
 
         {/* Processing Overlay */}
         {processing && (
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white rounded-lg p-4 flex items-center gap-3">
-              <LucideLoader className="w-5 h-5 animate-spin text-purple-600" />
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="flex items-center p-4 bg-white rounded-lg gap-3">
+              <LucideLoader className="w-5 h-5 text-purple-600 animate-spin" />
               <span className="text-sm font-medium">Processing...</span>
             </div>
           </div>
@@ -706,7 +706,7 @@ const FaceVerification = () => {
             autoPlay
             muted
             loop
-            className="absolute w-20 bottom-2 right-2 object-cover aspect-square z-50 rounded-full outline outline-1 outline-white"
+            className="absolute z-50 object-cover w-20 rounded-full bottom-2 right-2 aspect-square outline outline-1 outline-white"
           >
             <source src="/videos/output.mp4" type="video/mp4" />
           </video>
@@ -715,21 +715,21 @@ const FaceVerification = () => {
 
       {/* Error Display */}
       {error?.status && (
-        <div className="w-full bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="w-full p-4 border border-red-200 rounded-lg bg-red-50">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm text-red-800 font-medium">Error</p>
-              <p className="text-xs text-red-700 mt-1">{error.message}</p>
+              <p className="text-sm font-medium text-red-800">Error</p>
+              <p className="mt-1 text-xs text-red-700">{error.message}</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Action Buttons */}
-      <div className="w-full flex gap-3">
+      <div className="flex w-full gap-3">
         <button
-          className="flex-1 px-4 py-2 text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+          className="flex-1 px-4 py-2 border rounded-lg text-slate-600 border-slate-300 hover:bg-slate-50 transition-colors"
           onClick={() => window.history.back()}
           disabled={processing || isRecording || countdown > 0}
         >

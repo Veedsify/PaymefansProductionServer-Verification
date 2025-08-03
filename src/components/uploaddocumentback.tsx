@@ -88,21 +88,21 @@ const UploadDocumentBack = () => {
 
     return (
         <div className="flex flex-col items-center justify-center space-y-4 max-w-80">
-            <h1 className="text-2xl font-bold text-slate-950 text-center">
+            <h1 className="text-2xl font-bold text-center text-slate-950">
                 Take a picture of the back of
                 your {documentType && documentType?.charAt(0)?.toUpperCase() + documentType?.slice(1)}
             </h1>
-            <h3 className="text-wrap text-gray-800 text-sm">
+            <h3 className="text-sm text-gray-800 text-wrap">
                 Please make sure the document is clear and in frame
             </h3>
             <div className="relative w-full bg-gray-200 rounded-xl aspect-[3/4] overflow-hidden">
-                <video ref={ref} autoPlay muted className="w-full h-full object-cover"/>
+                <video ref={ref} autoPlay muted className="object-cover w-full h-full"/>
                 <div
-                    className="absolute top-0 left-0 w-full h-full flex inset-0 items-center justify-center"
+                    className="absolute inset-0 top-0 left-0 flex items-center justify-center w-full h-full"
                 >
-                    <Image fill src="/frame.png" className="invert block mx-auto origin-center" alt=""/>
+                    <Image fill src="/frame.png" className="block mx-auto invert origin-center" alt=""/>
                     {processing && (
-                        <div className="absolute bg-black bg-opacity-50 w-full h-full flex items-center justify-center">
+                        <div className="absolute flex items-center justify-center w-full h-full bg-black bg-opacity-50">
                             <LucideLoader size={32} className="animate-spin duration-200" stroke="#fff"/>
                         </div>
                     )}
@@ -110,18 +110,18 @@ const UploadDocumentBack = () => {
             </div>
             <div>
                 {error?.status && (
-                    <div className="text-red-500 text-sm">
+                    <div className="text-sm text-red-500">
                         {error.message}
                     </div>
                 )}
             </div>
-            <button className="text-slate-950 font-bold">
+            <button className="font-bold text-slate-950">
                 Cancel
             </button>
             <div>
                 <button
                     onClick={handleCapture}
-                    className=" bg-indigo-600 active:scale-95 duration-200 transition-all rounded-full shadow shadow-gray-300 inline-block w-16 h-16">
+                    className="inline-block w-16 h-16 bg-indigo-600 rounded-full shadow  active:scale-95 duration-200 transition-all shadow-gray-300">
                 </button>
             </div>
         </div>

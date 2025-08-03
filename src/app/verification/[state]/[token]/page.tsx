@@ -29,13 +29,13 @@ export default function Home() {
   // Loading spinner component
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full w-full items-center justify-center bg-slate-950 min-h-screen">
-        <div className="bg-white p-8 rounded-xl shadow-lg max-w-80 w-full flex flex-col items-center">
+      <div className="flex flex-col items-center justify-center w-full h-full min-h-screen bg-slate-950">
+        <div className="flex flex-col items-center w-full p-8 bg-white shadow-lg rounded-xl max-w-80">
           <TopNav />
           <div className="flex items-center justify-center w-80">
             <LucideLoader size={32} className="animate-spin duration-200" />
           </div>
-          <p className="text-gray-600 mb-4">Loading...</p>
+          <p className="mb-4 text-gray-600">Loading...</p>
         </div>
       </div>
     );
@@ -44,25 +44,25 @@ export default function Home() {
   // Invalid token component
   if (!isValid) {
     return (
-      <div className="flex flex-col h-full w-full items-center justify-center bg-slate-950 min-h-screen">
-        <div className="bg-white p-8 rounded-xl shadow-lg max-w-lg w-full">
+      <div className="flex flex-col items-center justify-center w-full h-full min-h-screen bg-slate-950">
+        <div className="w-full max-w-lg p-8 bg-white shadow-lg rounded-xl">
           <TopNav />
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">
+          <h1 className="mb-4 text-2xl font-bold text-gray-800">
             {params.state == "success"
               ? "Your Details Have Been Received"
               : "Oops, Some Of Your Details We're Incorrect"}
           </h1>
           <div>{/* IMAGES HERE */}</div>
-          <div className="text-gray-800 mb-6 text-sm">
+          <div className="mb-6 text-sm text-gray-800">
             {params.state === "success" ? (
               <>
-                <p className="text-gray-800 mb-3 text-sm">
+                <p className="mb-3 text-sm text-gray-800">
                   Thank you! We&apos;ve successfully received your details and
                   have begun the verification process for your account. This
                   process typically takes up to 24 hours, as we carefully review
                   the information provided to ensure everything checks out.
                 </p>
-                <p className="text-gray-800 mb-3 text-sm">
+                <p className="mb-3 text-sm text-gray-800">
                   Once your account is verified, you&apos;ll receive a
                   confirmation email with the next steps. We appreciate your
                   patience and thank you for choosing PayMeFans.
@@ -70,12 +70,12 @@ export default function Home() {
               </>
             ) : (
               <>
-                <p className="text-gray-800 mb-3 text-sm">
+                <p className="mb-3 text-sm text-gray-800">
                   We&apos;re sorry, but some of the information you submitted
                   appears to be incorrect, and we couldn&apos;t complete your
                   account verification at this time.
                 </p>
-                <p className="text-gray-800 mb-3 text-sm">
+                <p className="mb-3 text-sm text-gray-800">
                   Please double-check your details and try again later. If the
                   issue persists, consider reaching out to our support team for
                   assistance. We&apos;re here to help and want to get you
@@ -85,12 +85,12 @@ export default function Home() {
             )}
           </div>
           <button
-            className="w-full bg-fuchsia-700 hover:bg-fuchsia-800 text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200 flex items-center justify-center"
+            className="flex items-center justify-center w-full px-6 py-3 font-medium text-white rounded-lg bg-fuchsia-700 hover:bg-fuchsia-800 transition-colors duration-200"
             onClick={handleInvalidTokenRedirect}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
+              className="w-5 h-5 mr-2"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -109,9 +109,9 @@ export default function Home() {
 
   // Valid token component
   return (
-    <main className="w-full bg-slate-950 min-h-screen flex flex-col">
-      <div className="flex flex-col h-full w-full items-center justify-center flex-1">
-        <div className="bg-white p-6 rounded-xl">
+    <main className="flex flex-col w-full min-h-screen bg-slate-950">
+      <div className="flex flex-col items-center justify-center flex-1 w-full h-full">
+        <div className="p-6 bg-white rounded-xl">
           <TopNav />
           <OutLetPage />
         </div>

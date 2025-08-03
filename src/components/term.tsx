@@ -12,11 +12,11 @@ const TermsComponent = () => {
 
      return (
           <div className="flex flex-col items-center justify-center space-y-4 max-w-80">
-               <h1 className="text-2xl font-bold text-slate-950 text-center">
+               <h1 className="text-2xl font-bold text-center text-slate-950">
                     Lets Verify Your<br />
                     Identity
                </h1>
-               <h3 className="text-wrap text-pink-600">
+               <h3 className="text-pink-600 text-wrap">
                     To get started, please read and agree to the following:
                </h3>
                <p className="text-slate-950  text-sm h-[200px] overflow-auto leading-relaxed border p-1">
@@ -26,11 +26,11 @@ const TermsComponent = () => {
                </p>
                <button
                     onClick={agreeToTerms}
-                    className="bg-slate-950 text-white px-4 py-2 rounded-lg"
+                    className="px-4 py-2 text-white rounded-lg bg-slate-950"
                >
                     Agree and Continue
                </button>
-               <button className="text-slate-950 text-sm">
+               <button className="text-sm text-slate-950">
                     Cancel
                </button>
           </div>

@@ -13,7 +13,7 @@ const TopNav = () => {
      return (
           <>
                <div
-                    className="flex justify-between items-center mb-12"
+                    className="flex items-center justify-between mb-12"
                >
                     <Link href="/"
                          onClick={handleLanguageClick}
@@ -33,14 +33,14 @@ const TopNav = () => {
                </div>
                <div className={`fixed bg-gray-900 bg-opacity-15 backdrop-blur-sm top-0 left-0 h-screen w-full duration-300 ${languageIsOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} `}
                >
-                    <div className="h-full w-full relative flex items-center justify-center" onClick={handleLanguageClick}>
-                         <div className="bg-white p-6 rounded-md" onClick={e => e.stopPropagation()}>
+                    <div className="relative flex items-center justify-center w-full h-full" onClick={handleLanguageClick}>
+                         <div className="p-6 bg-white rounded-md" onClick={e => e.stopPropagation()}>
                               <div className="flex flex-col items-center justify-center space-y-4 max-w-80">
-                                   <h1 className="text-2xl font-bold text-gray-900 text-center">
+                                   <h1 className="text-2xl font-bold text-center text-gray-900">
                                         Select Language
                                    </h1>
                                    <div className="flex flex-col items-center justify-center space-y-4">
-                                        <button className="text-gray-900 hover:bg-purple-50 text-sm font-medium p-4 py-2 rounded-xl">English
+                                        <button className="p-4 py-2 text-sm font-medium text-gray-900 hover:bg-purple-50 rounded-xl">English
                                         </button>
                                    </div>
                               </div>

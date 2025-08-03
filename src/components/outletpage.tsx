@@ -38,7 +38,7 @@ const OutLetPage = () => {
                 <div className="flex items-center justify-center w-80">
                     <LucideLoader size={32} className="animate-spin duration-200"/>
                 </div>
-                <p className="text-gray-600 mb-4 text-center">
+                <p className="mb-4 text-center text-gray-600">
                     Loading...
                 </p>
             </div>
