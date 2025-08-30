@@ -10,19 +10,15 @@ import localforage from "localforage";
 import { useEffect, useRef, useState, useCallback } from "react";
 import handleMediaProcessing from "@/utils/handleMediaProcessing";
 import toast from "react-hot-toast";
-import {
-  printCameraDiagnostics,
-  debugCameraSetup,
-} from "@/utils/cameraDiagnostics";
 
 const FaceVerification = () => {
   const [canContinue, setCanContinue] = useState<boolean>(false);
   const [processing, setProcessing] = useState<boolean>(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null); // null = checking, false = denied, true = granted
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [countdown, setCountdown] = useState<number>(0);
   const [captureComplete, setCaptureComplete] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false); // New state for server submission
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<{
     status: boolean;
     message: string;
@@ -33,180 +29,88 @@ const FaceVerification = () => {
   const recordedChunks = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
 
-  useEffect(() => {
-    const checkCameraPermissions = async () => {
-      console.log("Starting camera permission check...");
+  // Simplified camera initialization
+  const initCamera = useCallback(async () => {
+    setHasPermission(null);
+    setError(null);
 
-      try {
-        // First check if getUserMedia is available
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          console.error("getUserMedia not supported");
-          setHasPermission(false);
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Camera API not supported");
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user",
+        },
+      });
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        streamRef.current = stream;
+
+        const handleVideoReady = () => {
+          console.log("Camera ready");
+          setHasPermission(true);
+          setCanContinue(true);
+        };
+
+        videoRef.current.onloadedmetadata = handleVideoReady;
+        videoRef.current.oncanplay = handleVideoReady;
+        videoRef.current.onerror = (e) => {
+          console.error("Video error:", e);
           setError({
             status: true,
-            message:
-              "Camera is not supported on this device or browser. Please use a modern browser that supports camera access.",
+            message: "Failed to display camera feed",
           });
-          return;
+        };
+
+        try {
+          await videoRef.current.play();
+        } catch (playError) {
+          console.warn("Video play failed (may be normal):", playError);
         }
 
-        // Check existing permissions if available
-        if (navigator.permissions) {
-          try {
-            const permission = await navigator.permissions.query({
-              name: "camera" as PermissionName,
-            });
-            console.log("Camera permission status:", permission.state);
-
-            if (permission.state === "denied") {
-              console.log("Camera permission explicitly denied");
-              setHasPermission(false);
-              setError({
-                status: true,
-                message:
-                  "Camera access has been denied. Please enable camera permissions in your browser settings and refresh the page.",
-              });
-              return;
+        // Use functional update to check current state
+        setTimeout(() => {
+          setHasPermission((current) => {
+            if (current === null) {
+              setCanContinue(true);
+              return true;
             }
-          } catch {
-            console.log(
-              "Permission query not supported, proceeding with direct access"
-            );
-          }
-        }
-
-        console.log("Attempting to get camera access...");
-
-        // Attempt to get camera access
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-            facingMode: "user",
-          },
-        });
-
-        console.log("Camera stream obtained successfully");
-
-        if (videoRef.current && stream) {
-          videoRef.current.srcObject = stream;
-          streamRef.current = stream;
-
-          // Set up event handlers before trying to play
-          const videoElement = videoRef.current;
-
-          const handleVideoReady = () => {
-            console.log("Video is ready and playing");
-            setHasPermission(true);
-            setCanContinue(true);
-            setError(null);
-          };
-
-          const handleVideoError = (e: string | Event) => {
-            console.error("Video element error:", e);
-            setHasPermission(false);
-            setError({
-              status: true,
-              message:
-                "Failed to display camera feed. Please refresh the page and try again.",
-            });
-          };
-
-          // Multiple ways to detect when video is ready
-          videoElement.onloadedmetadata = handleVideoReady;
-          videoElement.oncanplay = handleVideoReady;
-          videoElement.onerror = handleVideoError;
-
-          // Try to play the video
-          try {
-            await videoElement.play();
-            console.log("Video play() successful");
-
-            // If we get here and haven't set permission yet, set it now
-            if (hasPermission === null) {
-              console.log("Setting permission to true after successful play");
-              handleVideoReady();
-            }
-          } catch (playError) {
-            console.log("Video play failed, but this might be OK:", playError);
-            // Don't fail here - some browsers block autoplay but camera still works
-            // Set a timeout to check if video is actually working
-            setTimeout(() => {
-              if (videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
-                console.log("Video dimensions detected, camera is working");
-                handleVideoReady();
-              }
-            }, 1000);
-          }
-
-          // Fallback timeout in case events don't fire
-          setTimeout(() => {
-            if (hasPermission === null) {
-              console.log("Timeout reached - forcing camera to active state");
-              handleVideoReady();
-            }
-          }, 2000);
-        }
-      } catch (err: unknown) {
-        console.error("Camera access error:", err);
-        setHasPermission(false);
-
-        // Provide more specific error messages based on the error type
-        let errorMessage =
-          "Camera access is required for verification. Please allow camera permission and refresh the page.";
-
-        if (err instanceof Error) {
-          console.log("Error name:", err.name, "Error message:", err.message);
-
-          if (
-            err.name === "NotAllowedError" ||
-            err.name === "PermissionDeniedError"
-          ) {
-            errorMessage =
-              "Camera access was denied. Please click &apos;Allow&apos; when prompted for camera permission, or enable camera access in your browser settings.";
-          } else if (
-            err.name === "NotFoundError" ||
-            err.name === "DevicesNotFoundError"
-          ) {
-            errorMessage =
-              "No camera found on this device. Please ensure you have a working camera connected.";
-          } else if (
-            err.name === "NotReadableError" ||
-            err.name === "TrackStartError"
-          ) {
-            errorMessage =
-              "Camera is already in use by another application. Please close other apps using the camera and try again.";
-          } else if (
-            err.name === "OverconstrainedError" ||
-            err.name === "ConstraintNotSatisfiedError"
-          ) {
-            errorMessage =
-              "Camera doesn&apos;t meet the required specifications. Please try with a different camera.";
-          } else if (err.name === "NotSupportedError") {
-            errorMessage =
-              "Camera access is not supported on this browser. Please use a modern browser like Chrome, Firefox, or Safari.";
-          } else if (err.name === "AbortError") {
-            errorMessage = "Camera access was interrupted. Please try again.";
-          }
-        }
-
-        setError({
-          status: true,
-          message: errorMessage,
-        });
+            return current;
+          });
+        }, 1500);
       }
-    };
+    } catch (err) {
+      console.error("Camera init error:", err);
+      setHasPermission(false);
+      let message = "Camera access failed. Please check permissions.";
+      if (err instanceof Error) {
+        if (err.name === "NotAllowedError") {
+          message = "Camera access denied. Please allow camera permissions.";
+        } else if (err.name === "NotFoundError") {
+          message = "No camera found. Please connect a camera.";
+        } else if (err.name === "NotReadableError") {
+          message = "Camera is busy. Close other apps using the camera.";
+        }
+      }
+      setError({ status: true, message });
+    }
+  }, []); // Empty dependency array to stabilize the function
 
-    checkCameraPermissions();
+  // Initialize camera on mount
+  useEffect(() => {
+    initCamera();
 
     return () => {
-      // Cleanup camera stream
       if (streamRef.current) {
-        console.log("Cleaning up camera stream");
         streamRef.current.getTracks().forEach((track) => track.stop());
       }
     };
-  }, [hasPermission]);
+  }, [initCamera]);
 
   const handleStopRecording = useCallback(async () => {
     setProcessing(true);
@@ -214,12 +118,10 @@ const FaceVerification = () => {
 
     try {
       if (recordedChunks.current.length > 0) {
-        // Create video from recorded chunks
         const recordedBlob = new Blob(recordedChunks.current, {
           type: "video/webm",
         });
 
-        // Create a temporary video element to extract frame
         const tempVideo = document.createElement("video");
         tempVideo.src = URL.createObjectURL(recordedBlob);
 
@@ -227,33 +129,28 @@ const FaceVerification = () => {
           tempVideo.onloadeddata = resolve;
         });
 
-        tempVideo.currentTime = 1.5; // Extract frame from middle of video
+        tempVideo.currentTime = 1.5;
 
         await new Promise((resolve) => {
           tempVideo.onseeked = resolve;
         });
 
-        // Create canvas to capture frame
         const canvas = document.createElement("canvas");
         canvas.width = tempVideo.videoWidth;
         canvas.height = tempVideo.videoHeight;
         const ctx = canvas.getContext("2d");
         ctx?.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
 
-        // Convert canvas to JPEG Blob
         canvas.toBlob(
           async (blob) => {
             if (blob) {
               const fileReader = new FileReader();
               fileReader.readAsDataURL(blob);
               fileReader.onloadend = async () => {
-                // Save face video for verification
                 await localforage.setItem("faceVideo", fileReader.result);
                 setCaptureComplete(true);
                 setProcessing(false);
-                toast.success("Face capture completed successfully!");
-
-                // Don't automatically submit - let user click Continue
+                toast.success("Face capture completed!");
               };
             }
           },
@@ -261,10 +158,9 @@ const FaceVerification = () => {
           0.9
         );
 
-        // Cleanup
         URL.revokeObjectURL(tempVideo.src);
       }
-    } catch (err: unknown) {
+    } catch (err) {
       console.error("Processing error:", err);
       setError({
         status: true,
@@ -292,7 +188,6 @@ const FaceVerification = () => {
       mediaRecorder.start();
       setIsRecording(true);
 
-      // Auto-stop recording after 3 seconds
       setTimeout(() => {
         if (mediaRecorderRef.current?.state === "recording") {
           mediaRecorderRef.current.stop();
@@ -337,29 +232,24 @@ const FaceVerification = () => {
         id: "verification-submit",
       });
 
-      const uploadMediaForVerification = await handleMediaProcessing();
+      const result = await handleMediaProcessing();
 
-      if (!uploadMediaForVerification.error) {
-        toast.success("Verification submitted successfully!", {
+      if (!result.error) {
+        toast.success("Verification submitted!", {
           id: "verification-submit",
         });
         sessionStorage.clear();
-        // Redirect to pending status page instead of waiting for processing
-        window.location.href = `/verification/pending/${uploadMediaForVerification.token}`;
+        window.location.href = `/verification/pending/${result.token}`;
       } else {
         toast.error("Verification failed", { id: "verification-submit" });
         setError({
           status: true,
-          message: uploadMediaForVerification.message,
+          message: result.message,
         });
         setIsSubmitting(false);
-        // Don't redirect immediately, let the user see the error and potentially retry
-        // setTimeout(() => {
-        //   window.location.href = `/verification/failed/${uploadMediaForVerification.token}`;
-        // }, 3000);
       }
-    } catch (processingError: unknown) {
-      console.error("Media processing error:", processingError);
+    } catch (err) {
+      console.error("Submission error:", err);
       toast.error("Submission failed", { id: "verification-submit" });
       setError({
         status: true,
@@ -370,85 +260,14 @@ const FaceVerification = () => {
   }, []);
 
   const retryCamera = useCallback(async () => {
-    setHasPermission(null); // Set to checking state
-    setError(null);
-
     // Cleanup existing stream
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
 
-    // Re-trigger camera initialization
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: "user",
-        },
-      });
-
-      if (videoRef.current && stream) {
-        videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-
-        const videoElement = videoRef.current;
-
-        const handleRetrySuccess = () => {
-          console.log("Camera retry successful");
-          setHasPermission(true);
-          setCanContinue(true);
-          setError(null);
-        };
-
-        // Multiple ways to detect when video is ready
-        videoElement.onloadedmetadata = handleRetrySuccess;
-        videoElement.oncanplay = handleRetrySuccess;
-
-        // Try to play the video
-        try {
-          await videoElement.play();
-          console.log("Retry video play() successful");
-
-          // If we get here and haven't set permission yet, set it now
-          if (hasPermission === null) {
-            handleRetrySuccess();
-          }
-        } catch (playError) {
-          console.log(
-            "Retry video play failed, checking dimensions:",
-            playError
-          );
-          // Check if video is actually working via dimensions
-          setTimeout(() => {
-            if (videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
-              console.log(
-                "Retry: Video dimensions detected, camera is working"
-              );
-              handleRetrySuccess();
-            }
-          }, 1000);
-        }
-
-        // Fallback timeout for retry
-        setTimeout(() => {
-          if (hasPermission === null) {
-            console.log("Retry timeout - forcing success");
-            handleRetrySuccess();
-          }
-        }, 2000);
-      }
-    } catch (err: unknown) {
-      console.error("Camera retry failed:", err);
-      setHasPermission(false);
-      setError({
-        status: true,
-        message:
-          "Failed to access camera. Please check your browser permissions and try again.",
-      });
-    }
-  }, [hasPermission]);
+    initCamera();
+  }, [initCamera]);
 
   // Loading/checking state
   if (hasPermission === null) {
@@ -465,33 +284,6 @@ const FaceVerification = () => {
             Please wait while we check for camera permissions...
           </p>
         </div>
-
-        {/* Debug information in development mode */}
-        {process.env.NODE_ENV === "development" && (
-          <div className="w-full p-3 text-xs rounded-lg text-slate-400 bg-slate-50">
-            <p>Debug: Camera initialization in progress</p>
-            <p>Stream available: {streamRef.current ? "Yes" : "No"}</p>
-            <p>Video element ready: {videoRef.current ? "Yes" : "No"}</p>
-            <div className="flex mt-2 gap-2">
-              <button
-                onClick={() => {
-                  console.log("Debug: Force setting permission to true");
-                  setHasPermission(true);
-                  setCanContinue(true);
-                }}
-                className="px-3 py-1 text-xs text-yellow-800 bg-yellow-200 rounded hover:bg-yellow-300"
-              >
-                Force Continue
-              </button>
-              <button
-                onClick={() => debugCameraSetup()}
-                className="px-3 py-1 text-xs text-blue-800 bg-blue-200 rounded hover:bg-blue-300"
-              >
-                Debug Setup
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -518,7 +310,7 @@ const FaceVerification = () => {
                 • Click the camera icon in your browser&apos;s address bar
               </li>
               <li>
-                • Select &quot;Allow&quot; when prompted for camera permission
+                • Select &qout;Allow&qout; when prompted for camera permission
               </li>
               <li>• Refresh the page if needed</li>
             </ul>
@@ -538,16 +330,6 @@ const FaceVerification = () => {
             Refresh Page
           </button>
         </div>
-
-        {/* Debug mode - only show in development */}
-        {process.env.NODE_ENV === "development" && (
-          <button
-            onClick={() => printCameraDiagnostics()}
-            className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
-          >
-            Run Camera Diagnostics (Check Console)
-          </button>
-        )}
       </div>
     );
   }
@@ -567,7 +349,6 @@ const FaceVerification = () => {
           </p>
         </div>
 
-        {/* Show loading state when submitting */}
         {isSubmitting && (
           <div className="w-full p-4 mb-4 border border-blue-200 rounded-lg bg-blue-50">
             <div className="flex items-center gap-3">
@@ -584,7 +365,6 @@ const FaceVerification = () => {
           </div>
         )}
 
-        {/* Error Display */}
         {error?.status && !isSubmitting && (
           <div className="w-full p-4 mb-4 border border-red-200 rounded-lg bg-red-50">
             <div className="flex items-start gap-3">
@@ -633,7 +413,6 @@ const FaceVerification = () => {
 
   return (
     <div className="flex flex-col items-center justify-center max-w-md p-2 mx-auto space-y-6 md:p-6">
-      {/* Header */}
       <div className="text-center space-y-3">
         <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-green-500 to-blue-500">
           <Camera className="w-8 h-8 text-white" />
@@ -644,7 +423,6 @@ const FaceVerification = () => {
         </p>
       </div>
 
-      {/* Instructions */}
       <div className="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
         <h3 className="mb-2 text-sm font-medium text-blue-900">
           Instructions:
@@ -658,7 +436,6 @@ const FaceVerification = () => {
         </ul>
       </div>
 
-      {/* Camera Preview */}
       <div className="relative w-full bg-gray-200 rounded-xl aspect-[3/4] overflow-hidden">
         <video
           ref={videoRef}
@@ -669,20 +446,16 @@ const FaceVerification = () => {
           className="object-cover w-full h-full"
         />
 
-        {/* Overlay Elements */}
         <div className="absolute inset-0 flex items-center justify-center">
-          {/* Face Guide Oval */}
           <div className="w-48 h-64 border-4 border-white border-dashed rounded-full opacity-70"></div>
         </div>
 
-        {/* Countdown */}
         {countdown > 0 && (
           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="text-6xl font-bold text-white">{countdown}</div>
           </div>
         )}
 
-        {/* Recording Indicator */}
         {isRecording && (
           <div className="absolute flex items-center px-3 py-1 text-sm text-white bg-red-500 rounded-full top-4 right-4 gap-2">
             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
@@ -690,7 +463,6 @@ const FaceVerification = () => {
           </div>
         )}
 
-        {/* Processing Overlay */}
         {processing && (
           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="flex items-center p-4 bg-white rounded-lg gap-3">
@@ -700,7 +472,6 @@ const FaceVerification = () => {
           </div>
         )}
 
-        {/* Guide Video (optional) */}
         {canContinue && !isRecording && countdown === 0 && (
           <video
             autoPlay
@@ -713,7 +484,6 @@ const FaceVerification = () => {
         )}
       </div>
 
-      {/* Error Display */}
       {error?.status && (
         <div className="w-full p-4 border border-red-200 rounded-lg bg-red-50">
           <div className="flex items-start gap-3">
@@ -726,7 +496,6 @@ const FaceVerification = () => {
         </div>
       )}
 
-      {/* Action Buttons */}
       <div className="flex w-full gap-3">
         <button
           className="flex-1 px-4 py-2 border rounded-lg text-slate-600 border-slate-300 hover:bg-slate-50 transition-colors"
@@ -753,7 +522,6 @@ const FaceVerification = () => {
         </button>
       </div>
 
-      {/* Additional Info */}
       <div className="text-center">
         <p className="text-xs text-gray-600">
           Once capturing is done, you will be automatically redirected.

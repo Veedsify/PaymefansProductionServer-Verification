@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Clock, CheckCircle, XCircle, Loader, RefreshCw } from "lucide-react";
 import Link from "next/link";
 
@@ -13,7 +13,6 @@ interface VerificationStatus {
 
 const PendingVerification = () => {
   const params = useParams();
-  const router = useRouter();
   const token = params.token as string;
 
   const [status, setStatus] = useState<VerificationStatus | null>(null);
@@ -25,7 +24,10 @@ const PendingVerification = () => {
     try {
       setError(null);
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_VERIFICATION_ENDPOINT}/status/${token}`
+        `${process.env.NEXT_PUBLIC_VERIFICATION_ENDPOINT}/status/${token}`,
+        {
+          credentials: "include",
+        }
       );
 
       if (!response.ok) {
@@ -42,23 +44,23 @@ const PendingVerification = () => {
       setStatus(data);
       setLastChecked(new Date());
 
-    //   // Auto-redirect based on status
-    //   if (data.verification_state === "approved") {
-    //     setTimeout(() => {
-    //       router.push(`/verification/success/${token}`);
-    //     }, 2000);
-    //   } else if (data.verification_state === "rejected") {
-    //     setTimeout(() => {
-    //       router.push(`/verification/failed/${token}`);
-    //     }, 2000);
-    //   }
+      //   // Auto-redirect based on status
+      //   if (data.verification_state === "approved") {
+      //     setTimeout(() => {
+      //       router.push(`/verification/success/${token}`);
+      //     }, 2000);
+      //   } else if (data.verification_state === "rejected") {
+      //     setTimeout(() => {
+      //       router.push(`/verification/failed/${token}`);
+      //     }, 2000);
+      //   }
     } catch (error) {
       console.error("Status check error:", error);
       setError("Unable to check verification status. Please try again.");
     } finally {
       setLoading(false);
     }
-  }, [token, router]);
+  }, [token]);
 
   useEffect(() => {
     if (!token) return;
@@ -70,7 +72,7 @@ const PendingVerification = () => {
     const interval = setInterval(checkVerificationStatus, 10000);
 
     return () => clearInterval(interval);
-  }, [token]);
+  }, [checkVerificationStatus, token]);
 
   if (loading && !status) {
     return (
