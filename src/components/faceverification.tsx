@@ -13,12 +13,12 @@ import toast from "react-hot-toast";
 
 const FaceVerification = () => {
   const [canContinue, setCanContinue] = useState<boolean>(false);
-  const [processing, setProcessing] = useState<boolean>(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [countdown, setCountdown] = useState<number>(0);
   const [captureComplete, setCaptureComplete] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [recordedVideo, setRecordedVideo] = useState<string | null>(null);
   const [error, setError] = useState<{
     status: boolean;
     message: string;
@@ -29,77 +29,101 @@ const FaceVerification = () => {
   const recordedChunks = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Simplified camera initialization
+  // Initialize camera with better error handling
   const initCamera = useCallback(async () => {
     setHasPermission(null);
     setError(null);
 
     try {
-      if (!navigator.mediaDevices?.getUserMedia) {
-        throw new Error("Camera API not supported");
+      // Stop any existing stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const constraints = {
         video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
+          width: { ideal: 640, min: 320 },
+          height: { ideal: 480, min: 240 },
           facingMode: "user",
+          frameRate: { ideal: 30, min: 15 },
         },
-      });
+        audio: false,
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      streamRef.current = stream;
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        streamRef.current = stream;
 
-        const handleVideoReady = () => {
-          console.log("Camera ready");
-          setHasPermission(true);
-          setCanContinue(true);
-        };
+        // Wait for video to be ready
+        await new Promise<void>((resolve, reject) => {
+          if (!videoRef.current)
+            return reject(new Error("Video element not found"));
 
-        videoRef.current.onloadedmetadata = handleVideoReady;
-        videoRef.current.oncanplay = handleVideoReady;
-        videoRef.current.onerror = (e) => {
-          console.error("Video error:", e);
-          setError({
-            status: true,
-            message: "Failed to display camera feed",
-          });
-        };
+          const handleCanPlay = () => {
+            videoRef.current?.removeEventListener("canplay", handleCanPlay);
+            resolve();
+          };
 
-        try {
-          await videoRef.current.play();
-        } catch (playError) {
-          console.warn("Video play failed (may be normal):", playError);
-        }
+          const handleError = () => {
+            videoRef.current?.removeEventListener("error", handleError);
+            reject(new Error("Video playback failed"));
+          };
 
-        // Use functional update to check current state
-        setTimeout(() => {
-          setHasPermission((current) => {
-            if (current === null) {
-              setCanContinue(true);
-              return true;
-            }
-            return current;
-          });
-        }, 1500);
+          videoRef.current.addEventListener("canplay", handleCanPlay);
+          videoRef.current.addEventListener("error", handleError);
+
+          // Fallback timeout
+          setTimeout(() => {
+            videoRef.current?.removeEventListener("canplay", handleCanPlay);
+            videoRef.current?.removeEventListener("error", handleError);
+            resolve();
+          }, 3000);
+        });
+
+        setHasPermission(true);
+        setCanContinue(true);
       }
     } catch (err) {
       console.error("Camera init error:", err);
       setHasPermission(false);
+
       let message = "Camera access failed. Please check permissions.";
       if (err instanceof Error) {
         if (err.name === "NotAllowedError") {
-          message = "Camera access denied. Please allow camera permissions.";
+          message =
+            "Camera access denied. Please allow camera permissions and refresh the page.";
         } else if (err.name === "NotFoundError") {
-          message = "No camera found. Please connect a camera.";
+          message =
+            "No camera found. Please connect a camera and refresh the page.";
         } else if (err.name === "NotReadableError") {
-          message = "Camera is busy. Close other apps using the camera.";
+          message =
+            "Camera is busy. Close other apps using the camera and refresh the page.";
+        } else if (err.name === "OverconstrainedError") {
+          message =
+            "Camera doesn't support required settings. Trying with basic settings...";
+          // Try with minimal constraints
+          try {
+            const basicStream = await navigator.mediaDevices.getUserMedia({
+              video: true,
+              audio: false,
+            });
+            streamRef.current = basicStream;
+            if (videoRef.current) {
+              videoRef.current.srcObject = basicStream;
+              setHasPermission(true);
+              setCanContinue(true);
+              return;
+            }
+          } catch {
+            message = "Camera initialization failed completely.";
+          }
         }
       }
       setError({ status: true, message });
     }
-  }, []); // Empty dependency array to stabilize the function
+  }, []);
 
   // Initialize camera on mount
   useEffect(() => {
@@ -112,70 +136,35 @@ const FaceVerification = () => {
     };
   }, [initCamera]);
 
-  const handleStopRecording = useCallback(async () => {
-    setProcessing(true);
-    setIsRecording(false);
-
-    try {
-      if (recordedChunks.current.length > 0) {
-        const recordedBlob = new Blob(recordedChunks.current, {
-          type: "video/webm",
-        });
-
-        const tempVideo = document.createElement("video");
-        tempVideo.src = URL.createObjectURL(recordedBlob);
-
-        await new Promise((resolve) => {
-          tempVideo.onloadeddata = resolve;
-        });
-
-        tempVideo.currentTime = 1.5;
-
-        await new Promise((resolve) => {
-          tempVideo.onseeked = resolve;
-        });
-
-        const canvas = document.createElement("canvas");
-        canvas.width = tempVideo.videoWidth;
-        canvas.height = tempVideo.videoHeight;
-        const ctx = canvas.getContext("2d");
-        ctx?.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
-
-        canvas.toBlob(
-          async (blob) => {
-            if (blob) {
-              const fileReader = new FileReader();
-              fileReader.readAsDataURL(blob);
-              fileReader.onloadend = async () => {
-                await localforage.setItem("faceVideo", fileReader.result);
-                setCaptureComplete(true);
-                setProcessing(false);
-                toast.success("Face capture completed!");
-              };
-            }
-          },
-          "image/jpeg",
-          0.9
-        );
-
-        URL.revokeObjectURL(tempVideo.src);
-      }
-    } catch (err) {
-      console.error("Processing error:", err);
-      setError({
-        status: true,
-        message: "Failed to process face capture. Please try again.",
-      });
-      setProcessing(false);
-    }
-  }, []);
-
   const startRecording = useCallback(() => {
-    if (!streamRef.current) return;
+    if (!streamRef.current) {
+      setError({ status: true, message: "Camera not initialized" });
+      return;
+    }
 
     try {
       recordedChunks.current = [];
-      const mediaRecorder = new MediaRecorder(streamRef.current);
+      const options = {
+        mimeType: "video/webm;codecs=vp9,opus",
+        videoBitsPerSecond: 2500000,
+      };
+
+      // Fallback MIME types
+      let mediaRecorder: MediaRecorder;
+      try {
+        mediaRecorder = new MediaRecorder(streamRef.current, options);
+      } catch {
+        try {
+          mediaRecorder = new MediaRecorder(streamRef.current, {
+            mimeType: "video/webm",
+          });
+        } catch {
+          mediaRecorder = new MediaRecorder(streamRef.current, {
+            mimeType: "video/mp4",
+          });
+        }
+      }
+
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (event) => {
@@ -184,22 +173,46 @@ const FaceVerification = () => {
         }
       };
 
-      mediaRecorder.onstop = handleStopRecording;
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks.current, {
+          type: mediaRecorder.mimeType,
+        });
+        const videoUrl = URL.createObjectURL(blob);
+        setRecordedVideo(videoUrl);
+
+        // Store the blob for upload
+        localforage.setItem("faceVideoBlob", blob);
+        setCaptureComplete(true);
+        setIsRecording(false);
+        toast.success("Video recorded successfully!");
+      };
+
+      mediaRecorder.onerror = (event) => {
+        console.error("MediaRecorder error:", event);
+        setError({
+          status: true,
+          message: "Recording failed. Please try again.",
+        });
+        setIsRecording(false);
+      };
+
       mediaRecorder.start();
       setIsRecording(true);
 
+      // Record for 5 seconds
       setTimeout(() => {
         if (mediaRecorderRef.current?.state === "recording") {
           mediaRecorderRef.current.stop();
         }
-      }, 3000);
-    } catch {
+      }, 5000);
+    } catch (err) {
+      console.error("Recording setup error:", err);
       setError({
         status: true,
         message: "Failed to start recording. Please try again.",
       });
     }
-  }, [handleStopRecording]);
+  }, []);
 
   const startCountdown = useCallback(() => {
     setError(null);
@@ -219,8 +232,14 @@ const FaceVerification = () => {
   const resetCapture = () => {
     setCaptureComplete(false);
     setCountdown(0);
+    setRecordedVideo(null);
     setError(null);
     recordedChunks.current = [];
+
+    // Clean up video URL
+    if (recordedVideo) {
+      URL.revokeObjectURL(recordedVideo);
+    }
   };
 
   const handleContinueToServer = useCallback(async () => {
@@ -334,7 +353,7 @@ const FaceVerification = () => {
     );
   }
 
-  if (captureComplete) {
+  if (captureComplete && recordedVideo) {
     return (
       <div className="flex flex-col items-center justify-center max-w-md p-6 mx-auto">
         <div className="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full">
@@ -342,11 +361,21 @@ const FaceVerification = () => {
         </div>
         <div className="my-6 text-center">
           <h2 className="mb-2 text-xl font-bold text-slate-950">
-            Face Captured Successfully!
+            Video Recorded Successfully!
           </h2>
           <p className="text-sm text-slate-600">
-            Your face has been captured and will be used for verification.
+            Your face video has been captured and will be used for verification.
           </p>
+        </div>
+
+        {/* Video Preview */}
+        <div className="w-full mb-4">
+          <video
+            src={recordedVideo}
+            controls
+            className="w-full rounded-lg"
+            style={{ maxHeight: "200px" }}
+          />
         </div>
 
         {isSubmitting && (
@@ -419,7 +448,7 @@ const FaceVerification = () => {
         </div>
         <h1 className="text-2xl font-bold text-slate-950">Face Verification</h1>
         <p className="text-sm leading-relaxed text-slate-600">
-          Look directly at the camera and follow the instructions
+          Record a 5-second video of yourself looking directly at the camera
         </p>
       </div>
 
@@ -432,7 +461,8 @@ const FaceVerification = () => {
           <li>• Ensure good lighting</li>
           <li>• Remove sunglasses and hats</li>
           <li>• Keep your eyes open</li>
-          <li>• Stay still during capture</li>
+          <li>• Stay still during recording</li>
+          <li>• Recording will be 5 seconds long</li>
         </ul>
       </div>
 
@@ -463,7 +493,7 @@ const FaceVerification = () => {
           </div>
         )}
 
-        {processing && (
+        {false && (
           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="flex items-center p-4 bg-white rounded-lg gap-3">
               <LucideLoader className="w-5 h-5 text-purple-600 animate-spin" />
@@ -500,15 +530,15 @@ const FaceVerification = () => {
         <button
           className="flex-1 px-4 py-2 border rounded-lg text-slate-600 border-slate-300 hover:bg-slate-50 transition-colors"
           onClick={() => window.history.back()}
-          disabled={processing || isRecording || countdown > 0}
+          disabled={isRecording || countdown > 0}
         >
           Back
         </button>
         <button
           onClick={startCountdown}
-          disabled={processing || isRecording || countdown > 0 || !canContinue}
+          disabled={isRecording || countdown > 0 || !canContinue}
           className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors flex items-center justify-center gap-2 ${
-            canContinue && !processing && !isRecording && countdown === 0
+            canContinue && !isRecording && countdown === 0
               ? "bg-purple-600 hover:bg-purple-700"
               : "bg-gray-400 cursor-not-allowed"
           }`}
@@ -518,13 +548,14 @@ const FaceVerification = () => {
             ? `Starting in ${countdown}...`
             : isRecording
             ? "Recording..."
-            : "Start Capture"}
+            : "Start Recording"}
         </button>
       </div>
 
       <div className="text-center">
         <p className="text-xs text-gray-600">
-          Once capturing is done, you will be automatically redirected.
+          Make sure you&apos;re in a well-lit area and your face is clearly
+          visible.
         </p>
       </div>
     </div>

@@ -13,9 +13,9 @@ const handleMediaProcessing = async () => {
 
     const front = await localforage.getItem("front");
     const back = await localforage.getItem("back");
-    const faceVideo = await localforage.getItem("faceVideo");
+    const faceVideoBlob = await localforage.getItem("faceVideoBlob");
 
-    if (!faceVideo && !front && !back) {
+    if (!faceVideoBlob && !front && !back) {
       toast.error("Sorry, Some Of Your Documents Are Missing");
       return;
     }
@@ -28,9 +28,9 @@ const handleMediaProcessing = async () => {
       const backData = dataURLtoBlob(back as string);
       formData.append("back", backData);
     }
-    if (faceVideo) {
-      const faceVideoData = dataURLtoBlob(faceVideo as string);
-      formData.append("faceVideo", faceVideoData);
+    if (faceVideoBlob) {
+      // faceVideoBlob is already a Blob, so we can append it directly
+      formData.append("faceVideo", faceVideoBlob as Blob);
     }
 
     if (verificationData.country)
@@ -55,7 +55,7 @@ const handleMediaProcessing = async () => {
     toast.error(axiosError?.response?.data?.message || axiosError.message);
     await localforage.removeItem("front");
     await localforage.removeItem("back");
-    await localforage.removeItem("faceVideo");
+    await localforage.removeItem("faceVideoBlob");
     throw new Error("Error processing media");
   }
 };
