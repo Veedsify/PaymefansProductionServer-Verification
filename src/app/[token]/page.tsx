@@ -59,7 +59,7 @@ export default function Home() {
                 <div className="flex flex-col items-center w-full p-8 bg-white shadow-lg rounded-xl max-w-80">
                     <TopNav/>
                     <div className="flex items-center justify-center w-80">
-                        <LucideLoader size={32} className="animate-spin duration-200"/>
+                        <LucideLoader size={"lg"} className="animate-spin duration-200"/>
                     </div>
                     <p className="mb-4 text-gray-600">
                         Authenticating...

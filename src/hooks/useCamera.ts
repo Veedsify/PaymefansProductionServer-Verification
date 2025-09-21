@@ -120,25 +120,25 @@ export const useCamera = (options: UseCameraOptions = {}) => {
         } else if (err.name === "OverconstrainedError") {
           message =
             "Camera doesn't support required settings. Trying with basic settings...";
-          // Try with minimal constraints
-          try {
-            const basicStream = await getUserMediaWithTimeout({
-              video: true,
-              audio,
-            });
-            streamRef.current = basicStream;
-            if (videoRef.current) {
-              videoRef.current.srcObject = basicStream;
-              // Ensure video starts playing
-              videoRef.current.play().catch((err) => {
-                console.error("Video play error:", err);
-              });
-              setHasPermission(true);
-              return;
-            }
-          } catch {
-            message = "Camera initialization failed completely.";
-          }
+          // // Try with minimal constraints
+          // try {
+          //   const basicStream = await getUserMediaWithTimeout({
+          //     video: true,
+          //     audio,
+          //   });
+          //   streamRef.current = basicStream;
+          //   if (videoRef.current) {
+          //     videoRef.current.srcObject = basicStream;
+          //     // Ensure video starts playing
+          //     videoRef.current.play().catch((err) => {
+          //       console.error("Video play error:", err);
+          //     });
+          //     setHasPermission(true);
+          //     return;
+          //   }
+          // } catch {
+          //   message = "Camera initialization failed completely.";
+          // }
         }
       }
       setError({ status: true, message });
