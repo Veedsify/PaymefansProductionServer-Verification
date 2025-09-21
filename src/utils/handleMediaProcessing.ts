@@ -22,15 +22,38 @@ const handleMediaProcessing = async () => {
 
     if (front) {
       const frontData = dataURLtoBlob(front as string);
-      formData.append("front", frontData);
+      formData.append("front", frontData, "front.png");
     }
     if (back) {
       const backData = dataURLtoBlob(back as string);
-      formData.append("back", backData);
+      formData.append("back", backData, "back.png");
     }
     if (faceVideoBlob) {
-      // faceVideoBlob is already a Blob, so we can append it directly
-      formData.append("faceVideo", faceVideoBlob as Blob);
+      // Extract frame at 2 seconds from the video
+      const video = document.createElement("video");
+      const videoUrl = URL.createObjectURL(faceVideoBlob as Blob);
+      video.src = videoUrl;
+      await new Promise<void>((resolve) => {
+        video.onloadedmetadata = () => resolve();
+      });
+      video.currentTime = 2;
+      await new Promise<void>((resolve) => {
+        video.onseeked = () => resolve();
+      });
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageBlob = await new Promise<Blob | null>((resolve) => {
+          canvas.toBlob(resolve, "image/png");
+        });
+        if (imageBlob) {
+          formData.append("faceVideo", imageBlob, "faceImage.png");
+        }
+      }
+      URL.revokeObjectURL(videoUrl);
     }
 
     if (verificationData.country)
@@ -41,7 +64,7 @@ const handleMediaProcessing = async () => {
 
     const SendForVerification = await axios.post(
       `${process.env.NEXT_PUBLIC_VERIFICATION_ENDPOINT}/process/${token}`,
-      formData
+      formData,
     );
 
     return SendForVerification.data;
