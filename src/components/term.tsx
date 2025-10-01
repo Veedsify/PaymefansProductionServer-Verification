@@ -1,10 +1,11 @@
 "use client";
 
 import { useTrackedProgress } from "@/contexts/tracked-progress";
+import { useRouter } from "next/navigation";
 
 const TermsComponent = () => {
   const { setAgreedToTerms } = useTrackedProgress();
-
+  const router = useRouter();
   const agreeToTerms = () => {
     setAgreedToTerms(true);
   };
@@ -36,7 +37,9 @@ const TermsComponent = () => {
       >
         Agree and Continue
       </button>
-      <button className="text-sm text-slate-950">Cancel</button>
+      <button onClick={() => router.back()} className="text-sm text-slate-950">
+        Cancel
+      </button>
     </div>
   );
 };

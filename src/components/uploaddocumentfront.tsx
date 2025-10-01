@@ -2,15 +2,16 @@
 
 import { useTrackedProgress } from "@/contexts/tracked-progress";
 import { LucideLoader } from "lucide-react";
-import localforage from 'localforage';
+import localforage from "localforage";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 const UploadDocumentFront = () => {
-  const { documentType, setUploadDocument } =
-    useTrackedProgress();
+  const { documentType, setUploadDocument } = useTrackedProgress();
   const [canContinue, setCanContinue] = useState<boolean>(false);
   const [processing, setProcessing] = useState<boolean>(false);
+  const router = useRouter();
   const [error, setError] = useState<{
     status: boolean;
     message: string;
@@ -41,7 +42,7 @@ const UploadDocumentFront = () => {
             fileReader.readAsDataURL(blob);
             fileReader.onloadend = async () => {
               // Store an image
-              await localforage.setItem('front', fileReader.result);
+              await localforage.setItem("front", fileReader.result);
               // Now send this buffer to the backend or AWS Rekognition
               setUploadDocument(true, false);
               setProcessing(false);
@@ -113,7 +114,13 @@ const UploadDocumentFront = () => {
           className="object-cover w-full h-full"
         />
         <div className="absolute inset-0 top-0 left-0 flex items-center justify-center w-full h-full">
-          <Image width={1000} height={1000} src="/frame.png" className="block origin-center" alt="" />
+          <Image
+            width={1000}
+            height={1000}
+            src="/frame.png"
+            className="block origin-center"
+            alt=""
+          />
           {processing && (
             <div className="absolute flex items-center justify-center w-full h-full bg-black bg-opacity-50">
               <LucideLoader
@@ -130,7 +137,9 @@ const UploadDocumentFront = () => {
           <div className="text-sm text-red-500">{error.message}</div>
         )}
       </div>
-      <button className="font-bold text-slate-950">Cancel</button>
+      <button onClick={() => router.back()} className="text-sm text-slate-950">
+        Cancel
+      </button>
       <div>
         <button
           onClick={handleCapture}

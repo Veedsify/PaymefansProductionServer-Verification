@@ -1,10 +1,11 @@
 "use client";
 import { useTrackedProgress } from "@/contexts/tracked-progress";
+import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 
 const AcceptCamera = () => {
   const { setAgreedToCamera, agreedToCamera } = useTrackedProgress();
-
+  const router = useRouter();
   const handleCameraAccept = useCallback(() => {
     // If the user has already agreed, no need to request again
     if (agreedToCamera) {
@@ -16,7 +17,7 @@ const AcceptCamera = () => {
       .enumerateDevices()
       .then((devices) => {
         const hasVideoDevice = devices.some(
-          (device) => device.kind === "videoinput",
+          (device) => device.kind === "videoinput"
         );
 
         if (hasVideoDevice) {
@@ -73,7 +74,9 @@ const AcceptCamera = () => {
       >
         OK - I Understand
       </button>
-      <button className="text-sm text-slate-950">Cancel</button>
+      <button onClick={() => router.back()} className="text-sm text-slate-950">
+        Cancel
+      </button>
     </div>
   );
 };
