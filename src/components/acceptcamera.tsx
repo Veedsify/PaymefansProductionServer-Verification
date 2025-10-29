@@ -65,6 +65,10 @@ const AcceptCamera = () => {
           autoPlay
           muted
           loop
+          controls={false}
+          onContextMenu={(e) => e.preventDefault()}
+          disablePictureInPicture
+          controlsList="nodownload nofullscreen noremoteplayback"
           src="/grantaccess.mp4"
         ></video>
       </div>
