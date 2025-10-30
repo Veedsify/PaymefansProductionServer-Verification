@@ -72,7 +72,7 @@ const FaceVerification = () => {
         return prev - 1;
       });
     }, 1000);
-  }, [startRecording]);
+  }, [startRecording, hasPermission, streamRef]);
 
   const resetCapture = () => {
     setCaptureComplete(false);
@@ -166,7 +166,9 @@ const FaceVerification = () => {
               <li>
                 • Click the camera icon in your browser&apos;s address bar
               </li>
-              <li>• Select "Allow" when prompted for camera permission</li>
+              <li>
+                • Select &quot;Allow&quot; when prompted for camera permission
+              </li>
               <li>• Refresh the page if needed</li>
             </ul>
           </div>

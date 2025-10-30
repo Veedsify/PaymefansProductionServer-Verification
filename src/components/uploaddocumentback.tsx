@@ -80,8 +80,8 @@ const UploadDocumentBack = () => {
 
   useEffect(() => {
     canContinueHandler();
+    const video = ref.current;
     return () => {
-      const video = ref.current;
       const stream = video && (video.srcObject as MediaStream | null);
       if (stream) {
         stream.getTracks().forEach((t) => t.stop());
