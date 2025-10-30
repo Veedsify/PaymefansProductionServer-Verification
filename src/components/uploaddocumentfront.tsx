@@ -62,9 +62,8 @@ const UploadDocumentFront = () => {
     if (width < 768) {
       setCanContinue(true);
     } else {
-      // this should be set to false
-      setCanContinue(true);
-      // return
+      setCanContinue(false);
+      return;
     }
     navigator.mediaDevices
       .getUserMedia({
@@ -75,6 +74,8 @@ const UploadDocumentFront = () => {
       .then((stream) => {
         if (ref.current) {
           ref.current.srcObject = stream;
+          // ensure video starts
+          ref.current.play().catch(() => {});
         }
       })
       .catch((err) => {
@@ -84,6 +85,13 @@ const UploadDocumentFront = () => {
 
   useEffect(() => {
     canContinueHandler();
+    return () => {
+      const video = ref.current;
+      const stream = video && (video.srcObject as MediaStream | null);
+      if (stream) {
+        stream.getTracks().forEach((t) => t.stop());
+      }
+    };
   }, [canContinueHandler]);
 
   if (canContinue === false) {
@@ -111,6 +119,7 @@ const UploadDocumentFront = () => {
           ref={ref}
           autoPlay
           muted
+          playsInline
           className="object-cover w-full h-full"
         />
         <div className="absolute inset-0 top-0 left-0 flex items-center justify-center w-full h-full">

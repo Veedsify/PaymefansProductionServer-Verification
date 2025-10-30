@@ -58,9 +58,8 @@ const UploadDocumentBack = () => {
     if (width < 768) {
       setCanContinue(true);
     } else {
-      // this should be set to false
-      setCanContinue(true);
-      // return
+      setCanContinue(false);
+      return;
     }
     navigator.mediaDevices
       .getUserMedia({
@@ -71,6 +70,7 @@ const UploadDocumentBack = () => {
       .then((stream) => {
         if (ref.current) {
           ref.current.srcObject = stream;
+          ref.current.play().catch(() => {});
         }
       })
       .catch((err) => {
@@ -80,6 +80,13 @@ const UploadDocumentBack = () => {
 
   useEffect(() => {
     canContinueHandler();
+    return () => {
+      const video = ref.current;
+      const stream = video && (video.srcObject as MediaStream | null);
+      if (stream) {
+        stream.getTracks().forEach((t) => t.stop());
+      }
+    };
   }, [canContinueHandler]);
 
   if (!canContinue) {
@@ -107,6 +114,7 @@ const UploadDocumentBack = () => {
           ref={ref}
           autoPlay
           muted
+          playsInline
           className="object-cover w-full h-full"
         />
         <div className="absolute inset-0 top-0 left-0 flex items-center justify-center w-full h-full">

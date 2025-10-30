@@ -12,41 +12,17 @@ const AcceptCamera = () => {
       return;
     }
 
-    // Check if the user has already granted access to the camera
+    // Proactively request camera permission (video only)
     navigator.mediaDevices
-      .enumerateDevices()
-      .then((devices) => {
-        const hasVideoDevice = devices.some(
-          (device) => device.kind === "videoinput"
-        );
-
-        if (hasVideoDevice) {
-          navigator.mediaDevices
-            .getUserMedia({
-              video: true,
-              audio: true,
-            })
-            .then((stream) => {
-              if (stream) {
-                // Set the state to true once the user agrees
-                setAgreedToCamera(true);
-                // Optionally, you could close the stream after using it to free resources
-                stream.getTracks().forEach((track) => track.stop());
-              }
-            })
-            .catch((error) => {
-              // Handle errors, e.g., user denying access
-              console.error("Error accessing media devices:", error);
-            })
-            .finally(() => {
-              setAgreedToCamera(true);
-            });
-        } else {
-          console.warn("No video input devices found.");
+      .getUserMedia({ video: true, audio: false })
+      .then((stream) => {
+        if (stream) {
+          setAgreedToCamera(true);
+          stream.getTracks().forEach((track) => track.stop());
         }
       })
       .catch((error) => {
-        console.error("Error enumerating devices:", error);
+        console.error("Error accessing camera:", error);
       });
   }, [setAgreedToCamera, agreedToCamera]);
   return (

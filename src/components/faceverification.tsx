@@ -42,10 +42,24 @@ const FaceVerification = () => {
   const error = cameraError || recordingError || localError;
 
   const startRecording = useCallback(() => {
+    if (!streamRef.current) {
+      setLocalError({
+        status: true,
+        message: "Camera stream not ready. Please retry.",
+      });
+      return;
+    }
     startRecordingHook();
-  }, [startRecordingHook]);
+  }, [startRecordingHook, streamRef]);
 
   const startCountdown = useCallback(() => {
+    if (hasPermission !== true || !streamRef.current) {
+      setLocalError({
+        status: true,
+        message: "Please enable camera to start recording.",
+      });
+      return;
+    }
     setLocalError(null);
     setCountdown(3);
     const countInterval = setInterval(() => {
@@ -152,9 +166,7 @@ const FaceVerification = () => {
               <li>
                 • Click the camera icon in your browser&apos;s address bar
               </li>
-              <li>
-                • Select &qout;Allow&qout; when prompted for camera permission
-              </li>
+              <li>• Select "Allow" when prompted for camera permission</li>
               <li>• Refresh the page if needed</li>
             </ul>
           </div>
@@ -371,8 +383,8 @@ const FaceVerification = () => {
           {countdown > 0
             ? `Starting in ${countdown}...`
             : isRecording
-              ? "Recording..."
-              : "Start Recording"}
+            ? "Recording..."
+            : "Start Recording"}
         </button>
       </div>
 
