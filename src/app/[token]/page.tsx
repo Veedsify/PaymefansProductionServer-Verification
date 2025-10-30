@@ -58,11 +58,11 @@ export default function Home() {
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center w-full h-full min-h-screen bg-slate-950">
-                <div className="flex flex-col items-center w-full p-8 bg-white shadow-lg rounded-xl max-w-80">
+                <div className="flex flex-col items-center w-full p-8 bg-white shadow-lg rounded-xl ">
                     <TopNav />
                     <div className="flex items-center justify-center w-80">
                         <LucideLoader
-                            size={24}
+                            size={32}
                             className="animate-spin duration-200"
                         />
                     </div>

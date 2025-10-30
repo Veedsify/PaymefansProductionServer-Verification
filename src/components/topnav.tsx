@@ -1,54 +1,60 @@
 "use client";
-import { Languages } from "lucide-react"
+import { Languages } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { MouseEvent, useState } from "react";
 const TopNav = () => {
-     const [languageIsOpen, setLanguageIsOpen] = useState(false);
-     const handleLanguageClick = (e: MouseEvent<HTMLAnchorElement | HTMLDivElement>) => {
-          e.preventDefault();
-          setLanguageIsOpen(!languageIsOpen);
-     }
+    const [languageIsOpen, setLanguageIsOpen] = useState(false);
+    const handleLanguageClick = (
+        e: MouseEvent<HTMLAnchorElement | HTMLDivElement>,
+    ) => {
+        e.preventDefault();
+        setLanguageIsOpen(!languageIsOpen);
+    };
 
-     return (
-          <>
-               <div
-                    className="flex items-center justify-between mb-12"
-               >
-                    <Link href="/"
-                         onClick={handleLanguageClick}
+    return (
+        <>
+            <div className="flex items-center w-full gap-4 justify-between mb-12">
+                <Link href="/" onClick={handleLanguageClick}>
+                    <Languages />
+                </Link>
+
+                <Link href={process.env.NEXT_PUBLIC_MAIN_SITE as string}>
+                    <Image
+                        src="/logo.svg"
+                        alt="Paymefans Logo"
+                        width={150}
+                        height={32}
+                        className="border border-gray-300 rounded-lg"
+                    />
+                </Link>
+            </div>
+            <div
+                className={`fixed bg-gray-900 bg-opacity-15 backdrop-blur-sm top-0 left-0 h-screen w-full duration-300 ${languageIsOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"} `}
+            >
+                <div
+                    className="relative flex items-center justify-center w-full h-full"
+                    onClick={handleLanguageClick}
+                >
+                    <div
+                        className="p-6 bg-white rounded-md"
+                        onClick={(e) => e.stopPropagation()}
                     >
-                         <Languages />
-                    </Link>
-
-                    <Link href={process.env.NEXT_PUBLIC_MAIN_SITE as string}>
-                         <Image
-                              src="/logo.svg"
-                              alt="Paymefans Logo"
-                              width={150}
-                              height={32}
-                              className="border border-gray-300 rounded-lg"
-                         />
-                    </Link >
-               </div>
-               <div className={`fixed bg-gray-900 bg-opacity-15 backdrop-blur-sm top-0 left-0 h-screen w-full duration-300 ${languageIsOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} `}
-               >
-                    <div className="relative flex items-center justify-center w-full h-full" onClick={handleLanguageClick}>
-                         <div className="p-6 bg-white rounded-md" onClick={e => e.stopPropagation()}>
-                              <div className="flex flex-col items-center justify-center space-y-4 max-w-80">
-                                   <h1 className="text-2xl font-bold text-center text-gray-900">
-                                        Select Language
-                                   </h1>
-                                   <div className="flex flex-col items-center justify-center space-y-4">
-                                        <button className="p-4 py-2 text-sm font-medium text-gray-900 hover:bg-purple-50 rounded-xl">English
-                                        </button>
-                                   </div>
-                              </div>
-                         </div>
+                        <div className="flex flex-col items-center justify-center space-y-4 max-w-80">
+                            <h1 className="text-2xl font-bold text-center text-gray-900">
+                                Select Language
+                            </h1>
+                            <div className="flex flex-col items-center justify-center space-y-4">
+                                <button className="p-4 py-2 text-sm font-medium text-gray-900 hover:bg-purple-50 rounded-xl">
+                                    English
+                                </button>
+                            </div>
+                        </div>
                     </div>
-               </div>
-          </>
-     );
-}
+                </div>
+            </div>
+        </>
+    );
+};
 
 export default TopNav;
