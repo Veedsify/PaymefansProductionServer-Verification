@@ -32,60 +32,146 @@ const handleMediaProcessing = async () => {
     if (faceVideoBlob) {
       try {
         console.log("Processing video for screenshot...");
-        // Extract frame at 2 seconds from the video
+        // Extract frame from the video with improved reliability
         const video = document.createElement("video");
+        video.muted = true;
+        video.playsInline = true;
         const videoUrl = URL.createObjectURL(faceVideoBlob as Blob);
         video.src = videoUrl;
 
-        // Use a more robust way to load and seek
+        // Wait for video metadata to load
         await new Promise<void>((resolve, reject) => {
-          video.onloadedmetadata = () => resolve();
-          video.onerror = (e) => reject("Video metadata load error: " + e);
-          // Timeout safety
-          setTimeout(() => reject("Timeout loading video metadata"), 5000);
+          const timeout = setTimeout(() => {
+            reject(new Error("Timeout loading video metadata"));
+          }, 10000);
+
+          video.onloadedmetadata = () => {
+            clearTimeout(timeout);
+            resolve();
+          };
+          video.onerror = (e) => {
+            clearTimeout(timeout);
+            reject(new Error("Video metadata load error"));
+          };
         });
 
-        // Seek to 1s or 2s (safety check based on duration)
-        const seekTime = Math.min(
-          2,
-          video.duration > 0.5 ? video.duration / 2 : 0
-        );
+        // Ensure video has valid dimensions
+        if (video.videoWidth === 0 || video.videoHeight === 0) {
+          throw new Error("Video has invalid dimensions");
+        }
+
+        // Seek to middle of video (better chance of getting a good frame)
+        const seekTime = Math.max(0.5, Math.min(2, video.duration / 2));
         video.currentTime = seekTime;
 
+        // Wait for seek to complete and frame to be ready
         await new Promise<void>((resolve, reject) => {
-          video.onseeked = () => resolve();
-          video.onerror = (e) => reject("Video seek error: " + e);
-          setTimeout(() => reject("Timeout seeking video"), 5000);
+          const timeout = setTimeout(() => {
+            reject(new Error("Timeout seeking video"));
+          }, 10000);
+
+          const onSeeked = () => {
+            clearTimeout(timeout);
+            // Wait a bit more to ensure frame is rendered
+            setTimeout(() => {
+              video.removeEventListener("seeked", onSeeked);
+              video.removeEventListener("error", onError);
+              resolve();
+            }, 100);
+          };
+
+          const onError = () => {
+            clearTimeout(timeout);
+            video.removeEventListener("seeked", onSeeked);
+            video.removeEventListener("error", onError);
+            reject(new Error("Video seek error"));
+          };
+
+          video.addEventListener("seeked", onSeeked, { once: true });
+          video.addEventListener("error", onError, { once: true });
         });
 
+        // Create canvas with video dimensions
         const canvas = document.createElement("canvas");
-        // Ensure valid dimensions
-        if (video.videoWidth === 0 || video.videoHeight === 0) {
-          console.warn("Video dimensions are 0, screenshot might fail");
-        }
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 480;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
 
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const imageBlob = await new Promise<Blob | null>((resolve) => {
-            canvas.toBlob(resolve, "image/png", 0.8); // Add quality param
-          });
-          if (imageBlob) {
-            console.log("Screenshot generated successfully");
-            formData.append("faceVideo", imageBlob, "faceImage.png");
-          } else {
-            console.error("Failed to generate blob from canvas");
+        const ctx = canvas.getContext("2d", {
+          willReadFrequently: false,
+          alpha: false,
+        });
+
+        if (!ctx) {
+          throw new Error("Failed to get canvas context");
+        }
+
+        // Draw video frame to canvas
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Verify the canvas has content (not blank/black)
+        const imageData = ctx.getImageData(
+          0,
+          0,
+          Math.min(100, canvas.width),
+          Math.min(100, canvas.height)
+        );
+        const pixels = imageData.data;
+        let hasContent = false;
+
+        // Check if image has non-black pixels (simple check)
+        for (let i = 0; i < pixels.length; i += 4) {
+          const r = pixels[i];
+          const g = pixels[i + 1];
+          const b = pixels[i + 2];
+          // If any pixel is not black/dark, we have content
+          if (r > 10 || g > 10 || b > 10) {
+            hasContent = true;
+            break;
           }
         }
+
+        if (!hasContent) {
+          throw new Error(
+            "Captured frame appears to be blank. Please try recording again."
+          );
+        }
+
+        // Convert canvas to blob with high quality
+        const imageBlob = await new Promise<Blob | null>((resolve, reject) => {
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error("Failed to generate blob from canvas"));
+              } else {
+                resolve(blob);
+              }
+            },
+            "image/jpeg", // Use JPEG for better compatibility
+            0.95 // High quality
+          );
+        });
+
+        if (!imageBlob || imageBlob.size === 0) {
+          throw new Error("Generated image blob is empty");
+        }
+
+        console.log("Screenshot generated successfully", {
+          size: imageBlob.size,
+          dimensions: `${canvas.width}x${canvas.height}`,
+        });
+
+        formData.append("faceVideo", imageBlob, "faceImage.jpg");
         URL.revokeObjectURL(videoUrl);
       } catch (videoError) {
         console.error("Error generating video screenshot:", videoError);
-        // We continue even if screenshot fails, but log it.
-        // Depending on backend requirements, we might want to throw here.
-        // For now, let's assume valid video is enough if screenshot fails,
-        // or backend handles missing faceImage.
+        const errorMessage =
+          videoError instanceof Error
+            ? videoError.message
+            : "Failed to extract frame from video";
+        toast.error(
+          `Video processing error: ${errorMessage}. Please try recording again.`
+        );
+        throw new Error(errorMessage);
       }
     }
 

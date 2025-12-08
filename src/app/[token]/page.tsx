@@ -53,7 +53,10 @@ export default function TokenRootPage() {
 
   return (
     <div className="flex items-center justify-center min-h-[50vh] w-full">
-      <LucideLoader className="animate-spin text-white" />
+      <LucideLoader
+        className="animate-spin text-indigo-600 dark:text-indigo-400"
+        size={32}
+      />
     </div>
   );
 }

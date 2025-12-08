@@ -142,7 +142,7 @@ const UploadDocumentFront = () => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black text-white flex flex-col z-50">
+    <div className="fixed inset-0 bg-black dark:bg-gray-900 text-white flex flex-col z-50 safe-top safe-bottom">
       {/* Header overlay */}
       <div className="absolute top-0 left-0 w-full p-4 flex items-center justify-between z-10 bg-gradient-to-b from-black/60 to-transparent">
         <button
@@ -151,7 +151,7 @@ const UploadDocumentFront = () => {
         >
           <ArrowLeft className="w-6 h-6 text-white" />
         </button>
-        <div className="px-3 py-1 bg-black/40 backdrop-blur rounded-full border border-white/10 text-xs font-medium">
+        <div className="px-3 py-1 bg-black/40 dark:bg-gray-900/40 backdrop-blur rounded-full border border-white/10 dark:border-gray-700/30 text-xs font-medium">
           Front Side
         </div>
         <div className="w-10"></div> {/* Spacer */}
@@ -203,9 +203,9 @@ const UploadDocumentFront = () => {
         <button
           onClick={handleCapture}
           disabled={processing}
-          className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50"
+          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-4 border-white dark:border-gray-200 flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50 touch-manipulation"
         >
-          <div className="w-12 h-12 bg-white rounded-full"></div>
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white dark:bg-gray-200 rounded-full"></div>
         </button>
       </div>
 
