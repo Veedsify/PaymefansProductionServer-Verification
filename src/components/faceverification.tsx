@@ -1,13 +1,10 @@
 "use client";
 import {
-  Camera,
   Loader2,
   AlertCircle,
   CheckCircle2,
-  RotateCcw,
-  ShieldCheck,
-  Info,
-  X,
+  RotateCcw, Info,
+  X
 } from "lucide-react";
 import { useState, useCallback, useEffect } from "react";
 import handleMediaProcessing from "@/utils/handleMediaProcessing";
@@ -32,7 +29,6 @@ const FaceVerification = () => {
     videoRef,
     hasPermission,
     error: cameraError,
-    retryCamera,
     streamRef,
     initCamera,
   } = useCamera({ facingMode: "user", audio: false });
@@ -60,7 +56,7 @@ const FaceVerification = () => {
         });
       }
     }
-  }, [hasPermission, streamRef]);
+  }, [hasPermission, streamRef, videoRef]);
 
   const startRecording = useCallback(() => {
     if (!streamRef.current) {
@@ -143,7 +139,7 @@ const FaceVerification = () => {
       });
       setIsSubmitting(false);
     }
-  }, []);
+  }, [router]);
 
   // --- RENDER STATES ---
 

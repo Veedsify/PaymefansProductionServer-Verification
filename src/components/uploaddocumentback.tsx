@@ -50,7 +50,7 @@ const UploadDocumentBack = () => {
       );
       video.play();
     }
-  }, [setUploadDocument]);
+  }, [setUploadDocument, router, params.token]);
 
   const canContinueHandler = useCallback(() => {
     const width = window.innerWidth;

@@ -1,7 +1,7 @@
 "use client";
 import TopNav from "@/components/topnav";
 import { useTrackedProgress } from "@/contexts/tracked-progress";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { LucideLoader } from "lucide-react";
@@ -12,7 +12,6 @@ export default function TokenLayout({
   children: React.ReactNode;
 }) {
   const params = useParams();
-  const router = useRouter();
   const { setToken } = useTrackedProgress();
   const [isLoading, setIsLoading] = useState(true);
   const [isValid, setIsValid] = useState(false);
@@ -35,7 +34,7 @@ export default function TokenLayout({
           setIsValid(true);
           setToken(params.token as string);
         }
-      } catch (error) {
+      } catch {
         setIsValid(false);
       } finally {
         setIsLoading(false);

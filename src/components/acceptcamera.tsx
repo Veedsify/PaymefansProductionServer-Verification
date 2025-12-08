@@ -28,7 +28,7 @@ const AcceptCamera = () => {
       .catch((error) => {
         console.error("Error accessing camera:", error);
       });
-  }, [setAgreedToCamera, agreedToCamera]);
+  }, [setAgreedToCamera, agreedToCamera, params.token, router]);
 
   return (
     <div className="w-full max-w-md mx-auto p-6">

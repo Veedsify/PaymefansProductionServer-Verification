@@ -2,9 +2,8 @@
 import { useRouter, useParams } from "next/navigation";
 import { useTrackedProgress } from "@/contexts/tracked-progress";
 import { countries } from "@/utils/countries";
-import { ChangeEvent, useState } from "react";
-import { Globe, AlertCircle, ChevronRight, ChevronDown, X, Search, Check } from "lucide-react";
-import { clearVerificationData } from "@/utils/clearVerification";
+import {  useState } from "react";
+import { Globe, AlertCircle, ChevronRight, ChevronDown, Search, Check } from "lucide-react";
 
 const SelectCountry = () => {
   const { setSelectCountry, updateVerificationData } = useTrackedProgress();
@@ -18,18 +17,6 @@ const SelectCountry = () => {
   const filteredCountries = countries.filter(country => 
     country.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const handleCountryChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const country = e.target.value;
-    setError("");
-
-    if (country === "Select Country") {
-      setError("Please select a valid country");
-      return;
-    }
-
-    setSelectedCountry(country);
-  };
 
   const handleContinue = () => {
     if (selectedCountry) {
