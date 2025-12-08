@@ -44,7 +44,7 @@ const TermsComponent = () => {
               </h3>
             </div>
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-              By clicking "Agree and Continue" I consent to Company and its
+              By clicking &quot;Agree and Continue&quot; I consent to Company and its
               service provider, Paymefans, obtaining and disclosing a scan of my
               face geometry and barcode of my ID for the purpose of verifying my
               identity pursuant to Company and Paymefans&apos;s Privacy Policies

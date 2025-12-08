@@ -47,9 +47,9 @@ const handleMediaProcessing = async () => {
 
           video.onloadedmetadata = () => {
             clearTimeout(timeout);
-            resolve();
+            resolve();  
           };
-          video.onerror = (e) => {
+          video.onerror = () => {
             clearTimeout(timeout);
             reject(new Error("Video metadata load error"));
           };

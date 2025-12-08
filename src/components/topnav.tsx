@@ -6,10 +6,10 @@ import { MouseEvent, useState } from "react";
 const TopNav = () => {
     const [languageIsOpen, setLanguageIsOpen] = useState(false);
     const handleLanguageClick = (
-        e: MouseEvent<HTMLAnchorElement | HTMLDivElement>,
+      e: MouseEvent<HTMLButtonElement | HTMLDivElement>
     ) => {
-        e.preventDefault();
-        setLanguageIsOpen(!languageIsOpen);
+      e.preventDefault();
+      setLanguageIsOpen(!languageIsOpen);
     };
 
     return (
