@@ -259,7 +259,15 @@ const PendingVerification = () => {
       </div>
 
       {/* Navigation */}
-      <div className="w-full pt-4">
+      <div className="w-full pt-4 space-y-2">
+        {status.verification_state === "rejected" && (
+          <Link
+            href={`/${token}/face`}
+            className="block w-full px-4 py-2 text-sm text-center border rounded-lg text-indigo-600 border-indigo-300 bg-indigo-50 hover:bg-indigo-100 transition-colors font-medium"
+          >
+            Retry Verification
+          </Link>
+        )}
         <Link
           href={`${process.env.NEXT_PUBLIC_MAIN_SITE}/profile`}
           className="block w-full px-4 py-2 text-sm text-center border rounded-lg text-slate-600 border-slate-300 hover:bg-slate-50 transition-colors"

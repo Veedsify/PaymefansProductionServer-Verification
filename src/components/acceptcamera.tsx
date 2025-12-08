@@ -4,30 +4,73 @@ import { useRouter, useParams } from "next/navigation";
 import { useCallback } from "react";
 import { Camera, Mic, Video, X } from "lucide-react";
 import { clearVerificationData } from "@/utils/clearVerification";
+import toast from "react-hot-toast";
 
 const AcceptCamera = () => {
   const { setAgreedToCamera, agreedToCamera } = useTrackedProgress();
   const router = useRouter();
   const params = useParams();
 
-  const handleCameraAccept = useCallback(() => {
+  const handleCameraAccept = useCallback(async () => {
     if (agreedToCamera) {
       router.push(`/${params.token}/country`);
       return;
     }
 
-    navigator.mediaDevices
-      .getUserMedia({ video: true, audio: false })
-      .then((stream) => {
-        if (stream) {
-          setAgreedToCamera(true);
-          stream.getTracks().forEach((track) => track.stop());
-          router.push(`/${params.token}/country`);
+    try {
+      // Check if mediaDevices is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Camera not supported in this browser");
+      }
+
+      // Request camera permission with timeout
+      const stream = await Promise.race([
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false }),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Camera permission timeout")),
+            10000
+          )
+        ),
+      ]);
+
+      if (stream) {
+        // Stop the stream immediately after getting permission
+        stream.getTracks().forEach((track) => track.stop());
+        setAgreedToCamera(true);
+        router.push(`/${params.token}/country`);
+      }
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+
+      let errorMessage =
+        "Camera access denied. Please allow camera permissions and try again.";
+      if (error instanceof DOMException) {
+        // Provide user-friendly error messages
+        if (
+          error.name === "NotAllowedError" ||
+          error.message?.includes("permission")
+        ) {
+          errorMessage =
+            "Camera permission was denied. Please allow camera access in your browser settings and try again.";
+        } else if (
+          error.name === "NotFoundError" ||
+          error.name === "DevicesNotFoundError"
+        ) {
+          errorMessage = "No camera found on this device.";
+        } else if (
+          error.name === "NotReadableError" ||
+          error.name === "TrackStartError"
+        ) {
+          errorMessage =
+            "Camera is currently in use by another application. Please close other apps using the camera and try again.";
+        } else if (error.message?.includes("timeout")) {
+          errorMessage =
+            "Camera permission request timed out. Please try again.";
         }
-      })
-      .catch((error) => {
-        console.error("Error accessing camera:", error);
-      });
+      }
+      toast.error(errorMessage);
+    }
   }, [setAgreedToCamera, agreedToCamera, params.token, router]);
 
   return (

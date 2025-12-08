@@ -13,6 +13,8 @@ import { useCamera } from "@/hooks/useCamera";
 import { useRecording } from "@/hooks/useRecording";
 import { useRouter } from "next/navigation";
 import { clearVerificationData } from "@/utils/clearVerification";
+import localforage from "localforage";
+import { checkVerificationData } from "@/utils/checkVerificationData";
 
 const FaceVerification = () => {
   const router = useRouter();
@@ -24,6 +26,16 @@ const FaceVerification = () => {
     status: boolean;
     message: string;
   } | null>(null);
+  const [hasExistingData, setHasExistingData] = useState<boolean>(false);
+
+  // Check for existing data on mount
+  useEffect(() => {
+    checkVerificationData().then((data) => {
+      if (data.hasAll) {
+        setHasExistingData(true);
+      }
+    });
+  }, []);
 
   const {
     videoRef,
@@ -105,6 +117,20 @@ const FaceVerification = () => {
     setLocalError(null);
 
     try {
+      // Check if we have the required data before submitting
+      const front = await localforage.getItem("front");
+      const faceVideoBlob = await localforage.getItem("faceVideoBlob");
+
+      if (!front || !faceVideoBlob) {
+        setLocalError({
+          status: true,
+          message:
+            "Missing required documents. Please capture your documents again.",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       toast.loading("Processing verification...", {
         id: "verification-submit",
       });
@@ -115,29 +141,42 @@ const FaceVerification = () => {
         toast.success("Verification submitted successfully!", {
           id: "verification-submit",
         });
+        // Clear data only on successful submission
+        try {
+          await localforage.removeItem("front");
+          await localforage.removeItem("back");
+          await localforage.removeItem("faceVideoBlob");
+        } catch (e) {
+          console.error("Error clearing localforage:", e);
+        }
         // Short delay to let the toast show
         setTimeout(() => {
           sessionStorage.clear();
           router.push(`/verification/pending/${result.token}`);
         }, 1000);
       } else {
-        toast.error("Verification failed", {
+        toast.error(result.message || "Verification failed", {
           id: "verification-submit",
         });
         setLocalError({
           status: true,
-          message: result.message || "Verification failed. Please try again.",
+          message:
+            result.message ||
+            "Verification failed. You can retry without re-capturing your documents.",
         });
         setIsSubmitting(false);
       }
     } catch (err) {
       console.error("Submission error:", err);
-      toast.error("Submission failed", { id: "verification-submit" });
-      setLocalError({
-        status: true,
-        message: "Failed to submit verification. Please try again.",
-      });
-      setIsSubmitting(false);
+      if (err instanceof DOMException) {
+        const errorMessage = err.message;
+        toast.error(errorMessage, { id: "verification-submit" });
+        setLocalError({
+          status: true,
+          message: `${errorMessage} Your data has been preserved - you can retry without re-capturing.`,
+        });
+        setIsSubmitting(false);
+      }
     }
   }, [router]);
 
@@ -276,9 +315,20 @@ const FaceVerification = () => {
             )}
 
             {error && !isSubmitting && (
-              <div className="flex items-start gap-2.5 p-3 bg-red-50 text-red-700 rounded-xl">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                <span className="text-sm">{error.message}</span>
+              <div className="flex flex-col gap-2 p-3 bg-red-50 text-red-700 rounded-xl">
+                <div className="flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span className="text-sm flex-1">{error.message}</span>
+                </div>
+                {error.message.includes("retry") ||
+                error.message.includes("failed") ? (
+                  <button
+                    onClick={handleContinueToServer}
+                    className="text-xs text-red-700 underline hover:text-red-800 self-start"
+                  >
+                    Click here to retry submission
+                  </button>
+                ) : null}
               </div>
             )}
 
@@ -309,6 +359,21 @@ const FaceVerification = () => {
   return (
     <div className="w-full max-w-md mx-auto p-6">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        {hasExistingData && !recordedVideo && (
+          <div className="p-4 bg-blue-50 border-b border-blue-100">
+            <div className="flex items-start gap-2.5">
+              <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-xs font-medium text-blue-900">
+                  Previous data found
+                </p>
+                <p className="text-xs text-blue-700 mt-0.5">
+                  You can record a new video or submit with existing data
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="text-center p-6 pb-4 space-y-1.5">
           <h1 className="text-xl font-semibold text-gray-900">
             Face Verification
