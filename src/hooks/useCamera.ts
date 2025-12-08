@@ -21,79 +21,156 @@ export const useCamera = (options: UseCameraOptions = {}) => {
     setHasPermission(null);
     setError(null);
 
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("Camera not supported in this browser");
-      }
-      // Stop any existing stream
+    // Helper to stop current stream
+    const stopStream = () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+    };
+
+    stopStream();
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setError({
+        status: true,
+        message: "Camera not supported in this browser",
+      });
+      setHasPermission(false);
+      return;
+    }
+
+    const getUserMediaWithTimeout = (
+      constraints: MediaStreamConstraints,
+      timeout: number = 10000
+    ) => {
+      return Promise.race([
+        navigator.mediaDevices.getUserMedia(constraints),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Camera permission timeout")),
+            timeout
+          )
+        ),
+      ]);
+    };
+
+    try {
+      let stream: MediaStream | null = null;
+
+      // Strategy 1: Ideal constraints
+      try {
+        stream = await getUserMediaWithTimeout({
+          video: {
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+            facingMode,
+          },
+          audio,
+        });
+      } catch (err) {
+        console.warn("Strategy 1 failed, trying fallback...", err);
       }
 
-      const constraints = {
-        video: {
-          width: { ideal: 640, min: 320 },
-          height: { ideal: 480, min: 240 },
-          facingMode,
-          frameRate: { ideal: 30, min: 15 },
-        },
-        audio,
-      };
+      // Strategy 2: Basic constraints (just facingMode)
+      if (!stream) {
+        try {
+          stream = await getUserMediaWithTimeout({
+            video: { facingMode },
+            audio,
+          });
+        } catch (err) {
+          console.warn("Strategy 2 failed, trying fallback...", err);
+        }
+      }
 
-      const getUserMediaWithTimeout = (
-        constraints: MediaStreamConstraints,
-        timeout: number = 10000,
-      ) => {
-        return Promise.race([
-          navigator.mediaDevices.getUserMedia(constraints),
-          new Promise<never>((_, reject) =>
-            setTimeout(
-              () => reject(new Error("Camera permission timeout")),
-              timeout,
-            ),
-          ),
-        ]);
-      };
+      // Strategy 3: Minimal constraints (any video)
+      if (!stream) {
+        try {
+          stream = await getUserMediaWithTimeout({
+            video: true,
+            audio,
+          });
+        } catch (err) {
+          console.warn("Strategy 3 failed.", err);
+        }
+      }
 
-      const stream = await getUserMediaWithTimeout(constraints);
+      if (!stream) {
+        throw new Error("Could not initialize camera with any constraints");
+      }
+
       streamRef.current = stream;
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
 
         // Wait for video to be ready
-        await new Promise<void>((resolve, reject) => {
-          if (!videoRef.current)
-            return reject(new Error("Video element not found"));
+        await new Promise<void>((resolve) => {
+          if (!videoRef.current) {
+            setHasPermission(true);
+            return resolve();
+          }
 
-          const handleCanPlay = () => {
-            videoRef.current?.removeEventListener("canplay", handleCanPlay);
+          const videoEl = videoRef.current;
+
+          const onLoadedMetadata = () => {
+            cleanup();
+            setHasPermission(true);
             resolve();
           };
 
-          const handleError = () => {
-            videoRef.current?.removeEventListener("error", handleError);
-            reject(new Error("Video playback failed"));
+          const onCanPlay = () => {
+            cleanup();
+            setHasPermission(true);
+            resolve();
           };
 
-          videoRef.current.addEventListener("canplay", handleCanPlay);
-          videoRef.current.addEventListener("error", handleError);
+          const onError = (e: Event) => {
+            cleanup();
+            console.error("Video element error:", e);
+            // Still set permission to true if we have a stream
+            if (streamRef.current) {
+              setHasPermission(true);
+            }
+            resolve();
+          };
+
+          const cleanup = () => {
+            videoEl.removeEventListener("loadedmetadata", onLoadedMetadata);
+            videoEl.removeEventListener("canplay", onCanPlay);
+            videoEl.removeEventListener("error", onError);
+          };
+
+          // Try multiple events to ensure we catch when video is ready
+          videoEl.addEventListener("loadedmetadata", onLoadedMetadata, {
+            once: true,
+          });
+          videoEl.addEventListener("canplay", onCanPlay, { once: true });
+          videoEl.addEventListener("error", onError, { once: true });
+
+          // Start playing the video
+          videoEl.play().catch((e) => {
+            console.error("Play error:", e);
+            // Even if play fails, if we have metadata, we're good
+            if (videoEl.readyState >= 2) {
+              cleanup();
+              setHasPermission(true);
+              resolve();
+            }
+          });
 
           // Fallback timeout
           setTimeout(() => {
-            videoRef.current?.removeEventListener("canplay", handleCanPlay);
-            videoRef.current?.removeEventListener("error", handleError);
-            resolve();
-          }, 3000);
+            if (videoEl.readyState >= 1) {
+              cleanup();
+              setHasPermission(true);
+              resolve();
+            }
+          }, 2000);
         });
-
-        // Ensure video starts playing
-        if (videoRef.current) {
-          videoRef.current.play().catch((err) => {
-            console.error("Video play error:", err);
-          });
-        }
-
+      } else {
+        // If no video ref yet, still set permission (component might mount later)
         setHasPermission(true);
       }
     } catch (err) {
@@ -102,61 +179,32 @@ export const useCamera = (options: UseCameraOptions = {}) => {
 
       let message = "Camera access failed. Please check permissions.";
       if (err instanceof Error) {
-        if (err.message === "Camera not supported in this browser") {
+        if (err.name === "NotAllowedError") {
           message =
-            "Camera is not supported in this browser. Please use a different browser or device.";
-        } else if (err.message === "Camera permission timeout") {
-          message =
-            "Camera permission request timed out. Please try again or check your browser settings.";
-        } else if (err.name === "NotAllowedError") {
-          message =
-            "Camera access denied. Please allow camera permissions and refresh the page.";
-        } else if (err.name === "NotFoundError") {
-          message =
-            "No camera found. Please connect a camera and refresh the page.";
-        } else if (err.name === "NotReadableError") {
-          message =
-            "Camera is busy. Close other apps using the camera and refresh the page.";
-        } else if (err.name === "OverconstrainedError") {
-          message =
-            "Camera doesn't support required settings. Trying with basic settings...";
-          // // Try with minimal constraints
-          // try {
-          //   const basicStream = await getUserMediaWithTimeout({
-          //     video: true,
-          //     audio,
-          //   });
-          //   streamRef.current = basicStream;
-          //   if (videoRef.current) {
-          //     videoRef.current.srcObject = basicStream;
-          //     // Ensure video starts playing
-          //     videoRef.current.play().catch((err) => {
-          //       console.error("Video play error:", err);
-          //     });
-          //     setHasPermission(true);
-          //     return;
-          //   }
-          // } catch {
-          //   message = "Camera initialization failed completely.";
-          // }
+            "Camera access denied. Please allow camera permissions and refresh.";
+        } else if (
+          err.name === "NotFoundError" ||
+          err.name === "DevicesNotFoundError"
+        ) {
+          message = "No camera found on this device.";
+        } else if (
+          err.name === "NotReadableError" ||
+          err.name === "TrackStartError"
+        ) {
+          message = "Camera is currently in use by another application.";
         }
       }
+
       setError({ status: true, message });
     }
   }, [facingMode, audio]);
 
-  const retryCamera = useCallback(async () => {
-    // Cleanup existing stream
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
+  const retryCamera = useCallback(() => {
     initCamera();
   }, [initCamera]);
 
   useEffect(() => {
     initCamera();
-
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
