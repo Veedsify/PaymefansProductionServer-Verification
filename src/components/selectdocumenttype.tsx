@@ -58,7 +58,7 @@ const SelectDocumentType = () => {
       label: "Driver's License",
       description: "Government driving permit",
       icon: <Car className="w-5 h-5" />,
-      recommended: false,
+      recommended: false, 
     },
   ];
 
