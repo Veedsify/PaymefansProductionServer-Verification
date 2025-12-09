@@ -26,6 +26,7 @@ html {
   /* Prevent font size adjustment on iOS */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  font-size: 16px;
   /* Smooth scrolling */
   scroll-behavior: smooth;
 }

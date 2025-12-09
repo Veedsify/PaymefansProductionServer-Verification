@@ -36,19 +36,25 @@ const handleMediaProcessing = async () => {
         const video = document.createElement("video");
         video.muted = true;
         video.playsInline = true;
+        video.preload = "auto";
         const videoUrl = URL.createObjectURL(faceVideoBlob as Blob);
         video.src = videoUrl;
 
-        // Wait for video metadata to load
+        // Wait for metadata & canplay (Safari-friendly)
         await new Promise<void>((resolve, reject) => {
           const timeout = setTimeout(() => {
             reject(new Error("Timeout loading video metadata"));
-          }, 10000);
+          }, 15000);
 
-          video.onloadedmetadata = () => {
+          const onReady = () => {
             clearTimeout(timeout);
-            resolve();  
+            // Safari sometimes needs a play attempt before seeking
+            video.play().catch(() => {});
+            resolve();
           };
+
+          video.onloadedmetadata = onReady;
+          video.oncanplay = onReady;
           video.onerror = () => {
             clearTimeout(timeout);
             reject(new Error("Video metadata load error"));
@@ -60,36 +66,71 @@ const handleMediaProcessing = async () => {
           throw new Error("Video has invalid dimensions");
         }
 
-        // Seek to middle of video (better chance of getting a good frame)
-        const seekTime = Math.max(0.5, Math.min(2, video.duration / 2));
-        video.currentTime = seekTime;
+        // Seek to ~1s mark (or middle if shorter), Safari-friendly fallback
+        const desiredTime =
+          video.duration && !Number.isNaN(video.duration)
+            ? Math.min(
+                Math.max(1, video.duration / 2),
+                Math.max(0.25, video.duration - 0.1)
+              )
+            : 1;
 
-        // Wait for seek to complete and frame to be ready
-        await new Promise<void>((resolve, reject) => {
-          const timeout = setTimeout(() => {
-            reject(new Error("Timeout seeking video"));
-          }, 10000);
+        const attemptSeek = (time: number) =>
+          new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              reject(new Error("Timeout seeking video"));
+            }, 12000);
 
-          const onSeeked = () => {
-            clearTimeout(timeout);
-            // Wait a bit more to ensure frame is rendered
-            setTimeout(() => {
+            const cleanup = () => {
+              clearTimeout(timeout);
               video.removeEventListener("seeked", onSeeked);
+              video.removeEventListener("timeupdate", onTimeUpdate);
               video.removeEventListener("error", onError);
-              resolve();
-            }, 100);
-          };
+            };
 
-          const onError = () => {
-            clearTimeout(timeout);
-            video.removeEventListener("seeked", onSeeked);
-            video.removeEventListener("error", onError);
-            reject(new Error("Video seek error"));
-          };
+            const finishIfReady = () => {
+              if (video.readyState >= 2) {
+                setTimeout(() => {
+                  cleanup();
+                  resolve();
+                }, 120);
+                return true;
+              }
+              return false;
+            };
 
-          video.addEventListener("seeked", onSeeked, { once: true });
-          video.addEventListener("error", onError, { once: true });
-        });
+            const onSeeked = () => {
+              if (finishIfReady()) return;
+            };
+
+            const onTimeUpdate = () => {
+              if (finishIfReady()) return;
+            };
+
+            const onError = () => {
+              cleanup();
+              reject(new Error("Video seek error"));
+            };
+
+            video.addEventListener("seeked", onSeeked);
+            video.addEventListener("timeupdate", onTimeUpdate);
+            video.addEventListener("error", onError);
+
+            try {
+              video.currentTime = time;
+            } catch (e) {
+              cleanup();
+              reject(e);
+            }
+          });
+
+        // Try primary seek, then fallback to 0.1s if needed
+        try {
+          await attemptSeek(desiredTime);
+        } catch (seekErr) {
+          console.warn("Primary seek failed, retrying near start:", seekErr);
+          await attemptSeek(0.1);
+        }
 
         // Create canvas with video dimensions
         const canvas = document.createElement("canvas");
