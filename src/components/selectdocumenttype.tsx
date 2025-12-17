@@ -39,10 +39,10 @@ const SelectDocumentType = () => {
     {
       id: "national_id",
       value: "national_id",
-      label: "National ID Card",
+      label: "National Identity Card",
       description: "Any valid government ID card",
       icon: <User className="w-5 h-5" />,
-      recommended: true,
+      recommended: false,
     },
     {
       id: "passport",
@@ -50,7 +50,7 @@ const SelectDocumentType = () => {
       label: "International Passport",
       description: "Standard travel document",
       icon: <FileText className="w-5 h-5" />,
-      recommended: false,
+      recommended: true,
     },
     {
       id: "drivers_license",

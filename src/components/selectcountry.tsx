@@ -4,7 +4,6 @@ import { useTrackedProgress } from "@/contexts/tracked-progress";
 import { countries } from "@/utils/countries";
 import {  useState } from "react";
 import { Globe, AlertCircle, ChevronRight, ChevronDown, Search, Check } from "lucide-react";
-
 const SelectCountry = () => {
   const { setSelectCountry, updateVerificationData } = useTrackedProgress();
   const [selectedCountry, setSelectedCountry] = useState<string>("");
@@ -13,11 +12,9 @@ const SelectCountry = () => {
   const [error, setError] = useState<string>("");
   const router = useRouter();
   const params = useParams();
-
   const filteredCountries = countries.filter(country => 
     country.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
   const handleContinue = () => {
     if (selectedCountry) {
       updateVerificationData("country", selectedCountry);
@@ -25,7 +22,6 @@ const SelectCountry = () => {
       router.push(`/${params.token}/document-type`);
     }
   };
-
   return (
     <div className="w-full max-w-md mx-auto p-4 sm:p-6 flex-1 flex flex-col animate-in fade-in duration-500">
       <div className="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-gray-700 relative flex flex-col flex-1 min-h-0">
@@ -34,7 +30,6 @@ const SelectCountry = () => {
           <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto bg-green-50 dark:bg-green-900/30 rounded-2xl flex items-center justify-center transform -rotate-2">
             <Globe className="w-7 h-7 sm:w-8 sm:h-8 text-green-600 dark:text-green-400" />
           </div>
-
           <div className="space-y-1 sm:space-y-2">
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-gray-100">
               Where are you?
@@ -44,7 +39,6 @@ const SelectCountry = () => {
             </p>
           </div>
         </div>
-
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 flex-1 flex flex-col min-h-0">
           {/* Warning Box */}
           <div className="p-3 sm:p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-xl flex items-start gap-2 sm:gap-3">
@@ -58,7 +52,6 @@ const SelectCountry = () => {
               </p>
             </div>
           </div>
-
           {/* Country Select */}
           <div className="space-y-2 flex-shrink-0">
             <label className="block text-xs font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider ml-1">
@@ -98,7 +91,6 @@ const SelectCountry = () => {
                   }`}
                 />
               </div>
-
               {isOpen && (
                 <>
                   <div
@@ -167,15 +159,14 @@ const SelectCountry = () => {
               </p>
             )}
           </div>
-
           {/* Supported Countries Info */}
-          <div className="bg-slate-50 dark:bg-gray-900/50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-100 dark:border-gray-700 flex-shrink-0">
+          {/* <div className="bg-slate-50 dark:bg-gray-900/50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-100 dark:border-gray-700 flex-shrink-0">
             <h3 className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-2 sm:mb-3">
               Supported Regions
             </h3>
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center px-2 sm:px-2.5 py-1 rounded-lg bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-xs font-medium text-slate-600 dark:text-gray-300">
-                🇳🇬 Nigeria
+                🇳🇬 Nigeria (NGN)
               </span>
               <span className="inline-flex items-center px-2 sm:px-2.5 py-1 rounded-lg bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-xs font-medium text-slate-600 dark:text-gray-300">
                 🇬🇭 Ghana
@@ -184,9 +175,8 @@ const SelectCountry = () => {
                 + More coming soon
               </span>
             </div>
-          </div>
+          </div> */}
         </div>
-
         {/* Action Buttons */}
         <div className="p-4 sm:p-6 pt-0 flex gap-2 sm:gap-3 safe-bottom">
           <button
@@ -215,5 +205,4 @@ const SelectCountry = () => {
     </div>
   );
 };
-
 export default SelectCountry;
